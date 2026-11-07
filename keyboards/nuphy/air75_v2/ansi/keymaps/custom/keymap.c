@@ -33,9 +33,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 [1] = LAYOUT_ansi_84(
 	_______, 	KC_F1,  	KC_F2,  	KC_F3, 		KC_F4,  	KC_F5,  	KC_F6,  	KC_F7,  	KC_F8,  	KC_F9, 		KC_F10, 	KC_F11, 	KC_F12, 	MAC_PRT,	_______,	_______,
 	_______, 	LNK_BLE1,  	LNK_BLE2,  	LNK_BLE3,  	LNK_RF,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	_______, 				_______,	_______,
-	_______, 	_______,   	_______,   	_______,  	DEV_RESET,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	SLEEP_MODE, 			KC_BSLS,	_______,
-	_______,	MO(4),   	_______,   	_______,  	_______,   	_______,   	_______,	_______,   	_______,   	_______,  	_______,	_______, 	 						_______,	_______,
-	_______,				_______,   	_______,   	RGB_TEST,  	_______,	BAT_SHOW,	BAT_NUM,	MS_WIGL, 		RGB_SPD,	RGB_SPI,	_______,				_______,	RGB_VAI,	_______,
+	_______, 	_______,   	_______,   	_______,  	DEV_RESET,   	RGB_TEST,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,		_______, 			KC_BSLS,	_______,
+	_______,	MO(4),   	SLEEP_MODE,   	_______,  	_______,   	_______,   	_______,	_______,   	_______,   	_______,  	_______,	_______, 	 						_______,	_______,
+	_______,				_______,   	_______,   	_______,  	_______,	BAT_SHOW,	BAT_NUM,	MS_WIGL, 		RGB_SPD,	RGB_SPI,	_______,				_______,	RGB_VAI,	_______,
 	_______,	_______,	_______,										_______, 							_______,	MO(1),   	_______,				RGB_MOD,	RGB_VAD,    RGB_HUI),
 
 // layer win
@@ -51,9 +51,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 [3] = LAYOUT_ansi_84(
 	_______, 	KC_BRID,   	KC_BRIU,    _______,  	_______,   	_______,   	_______,   	KC_MPRV,   	KC_MPLY,   	KC_MNXT,  	KC_MUTE, 	KC_VOLD, 	KC_VOLU,	_______,	_______,	_______,
 	_______, 	LNK_BLE1,  	LNK_BLE2,  	LNK_BLE3,  	LNK_RF,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	_______, 				_______,	_______,
-	_______, 	_______,   	_______,   	_______,  	DEV_RESET,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	SLEEP_MODE, 			KC_BSLS,	_______,
-	_______,	MO(4),   	_______,   	_______,  	_______,   	_______,   	_______,	_______,   	_______,   	_______,  	_______,	_______, 	 						_______,	_______,
-	_______,				_______,   	_______,   	RGB_TEST,  	_______,	BAT_SHOW,	BAT_NUM,	MS_WIGL, 		RGB_SPD,	RGB_SPI,	_______,				_______,	RGB_VAI,	_______,
+	_______, 	_______,   	_______,   	_______,  	DEV_RESET,   	RGB_TEST,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,		_______, 			KC_BSLS,	_______,
+	_______,	MO(4),   	SLEEP_MODE,   	_______,  	_______,   	_______,   	_______,	_______,   	_______,   	_______,  	_______,	_______, 	 						_______,	_______,
+	_______,				_______,   	_______,   	_______,  	_______,	BAT_SHOW,	BAT_NUM,	MS_WIGL, 		RGB_SPD,	RGB_SPI,	_______,				_______,	RGB_VAI,	_______,
 	_______,	_______,	_______,										_______, 							_______,	MO(3),   	_______,				RGB_MOD,	RGB_VAD,    RGB_HUI),
 
 // layer 4
@@ -143,9 +143,10 @@ bool rgb_matrix_indicators_user(void) {
     }
     set_key_led(2, 14, white_r, white_g, white_b); // Mac print
     set_key_led(3, 1, white_r, white_g, white_b);  // Fn + A: extra layer
-    set_key_led(2, 12, white_r, white_g, white_b); // Fn + ]: sleep toggle
+    set_key_led(3, 2, white_r, white_g, white_b); // Fn + S: sleep toggle
     set_key_led(2, 4, 0xFF, 0x00, 0x00);           // Fn + R: reset (hold 3 seconds)
-    set_key_led(2, 13, white_r, white_g, white_b); // Fn + backslash: backslash / pipe
+    set_key_led(2, 5, white_r, white_g, white_b);  // Fn + T: RGB test mode
+    set_key_led(2, 13, 0x00, 0x40, 0xFF);          // Fn + backslash: backslash / pipe (blue)
     set_key_led(4, 4, white_r, white_g, white_b);  // Fn + C: RGB test (hold 3 seconds)
     set_key_led(4, 9, white_r, white_g, white_b);  // RGB speed
     set_key_led(4, 10, white_r, white_g, white_b); // RGB speed
