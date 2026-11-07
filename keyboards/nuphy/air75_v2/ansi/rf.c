@@ -205,106 +205,142 @@ void uart_send_report_nkro(report_nkro_t *report) {
 void RF_Protocol_Receive(void) {
     uint8_t i, check_sum = 0;
 
-    if (Usart_Mgr.RXDState == RX_Done) {
-        f_uart_ack = 1;
-        sync_lost = 0;
-
-        if (Usart_Mgr.RXDLen > 4) {
-            if((Usart_Mgr.RXDLen - 5) != RX_LEN) 
-                return;
-
-            for (i = 0; i < RX_LEN; i++)
-                check_sum += Usart_Mgr.RXDBuf[4 + i];
-
-            if (check_sum != Usart_Mgr.RXDBuf[4 + i]) {
-                Usart_Mgr.RXDState = RX_SUM_ERR;
-                return;
-            }
-        } else if (Usart_Mgr.RXDLen == 3) {
-            if (Usart_Mgr.RXDBuf[2] == 0xA0) {
-                f_uart_ack = 1;
-            }
-            else {
-                return;
-            }
-        } else {
-            return;
-        }
-
-        switch (RX_CMD) {
-            case CMD_HAND: {
-                f_rf_hand_ok = 1;
-                break;
-            }
-
-            case CMD_24G_SUSPEND: {
-                f_goto_sleep = 1;
-                break;
-            }
-
-            case CMD_NEW_ADV: {
-                f_rf_new_adv_ok = 1;
-                break;
-            }
-
-            case CMD_RF_STS_SYSC: {
-                static uint8_t error_cnt = 0;
-
-                if (dev_info.link_mode == Usart_Mgr.RXDBuf[4]) {
-                    error_cnt = 0;
-
-                    dev_info.rf_state = Usart_Mgr.RXDBuf[5];
-
-                    if ((dev_info.rf_state == RF_CONNECT) && ((Usart_Mgr.RXDBuf[6] & 0xf8) == 0)) {
-                        dev_info.rf_led = Usart_Mgr.RXDBuf[6];
-                    }
-
-                    dev_info.rf_charge = Usart_Mgr.RXDBuf[7];
-
-                    if (Usart_Mgr.RXDBuf[8] <= 100) dev_info.rf_baterry = Usart_Mgr.RXDBuf[8];
-                    if (dev_info.rf_charge & 0x01) dev_info.rf_baterry = 100;
-                }
-                else {
-                    if (dev_info.rf_state != RF_INVALID) {
-                        if (error_cnt >= 5) {
-                            error_cnt      = 0;
-                            f_send_channel = 1;
-                        } else {
-                            error_cnt++;
-                        }
-                    }
-                }
-
-                f_rf_sts_sysc_ok = 1;
-                break;
-            }
-
-            case CMD_READ_DATA: {
-                memcpy(func_tab, &Usart_Mgr.RXDBuf[4], 32);
-
-                if (func_tab[4] <= LINK_USB) {
-                    dev_info.link_mode = func_tab[4];
-                }
-
-                if (func_tab[5] < LINK_USB) {
-                    dev_info.rf_channel = func_tab[5];
-                }
-
-                if ((func_tab[6] <= LINK_BT_3) && (func_tab[6] >= LINK_BT_1)) {
-                    dev_info.ble_channel = func_tab[6];
-                }
-
-                f_rf_read_data_ok = 1;
-                break;
-            }
-        }
-
-        Usart_Mgr.RXDLen      = 0;
-        Usart_Mgr.RXDState    = RX_Idle;
-        Usart_Mgr.RXDOverTime = 0;
+    if (Usart_Mgr.RXDState != RX_Done) {
+        return;
     }
-}
 
+    /* Validate the frame header and minimum frame length. */
+    if ((Usart_Mgr.RXDLen < 3) || (RX_SBYTE != UART_HEAD)) {
+        goto invalid_frame;
+    }
+
+    if (Usart_Mgr.RXDLen == 3) {
+        /* Three-byte frames are acknowledgement-only packets. */
+        if (RX_ACK != 0xA0) {
+            goto invalid_frame;
+        }
+    } else {
+        /* Data frames contain a header, four-byte prefix, payload and checksum. */
+        if ((Usart_Mgr.RXDLen <= 4) ||
+            (Usart_Mgr.RXDLen != (RX_LEN + 5))) {
+            goto invalid_frame;
+        }
+
+        for (i = 0; i < RX_LEN; i++) {
+            check_sum += Usart_Mgr.RXDBuf[4 + i];
+        }
+
+        if (check_sum != Usart_Mgr.RXDBuf[4 + i]) {
+            goto invalid_frame;
+        }
+
+        /* Validate the payload size required by each command handler. */
+        switch (RX_CMD) {
+            case CMD_RF_STS_SYSC:
+                if (RX_LEN < 5) {
+                    goto invalid_frame;
+                }
+                break;
+
+            case CMD_READ_DATA:
+                if (RX_LEN < FUNC_VALID_LEN) {
+                    goto invalid_frame;
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    /* Only valid packets acknowledge transmission and restore sync. */
+    f_uart_ack = 1;
+    sync_lost = 0;
+
+    switch (RX_CMD) {
+        case CMD_HAND: {
+            f_rf_hand_ok = 1;
+            break;
+        }
+
+        case CMD_24G_SUSPEND: {
+            f_goto_sleep = 1;
+            break;
+        }
+
+        case CMD_NEW_ADV: {
+            f_rf_new_adv_ok = 1;
+            break;
+        }
+
+        case CMD_RF_STS_SYSC: {
+            static uint8_t error_cnt = 0;
+
+            if (dev_info.link_mode == Usart_Mgr.RXDBuf[4]) {
+                error_cnt = 0;
+
+                dev_info.rf_state = Usart_Mgr.RXDBuf[5];
+
+                if ((dev_info.rf_state == RF_CONNECT) &&
+                    ((Usart_Mgr.RXDBuf[6] & 0xf8) == 0)) {
+                    dev_info.rf_led = Usart_Mgr.RXDBuf[6];
+                }
+
+                dev_info.rf_charge = Usart_Mgr.RXDBuf[7];
+
+                if (Usart_Mgr.RXDBuf[8] <= 100) {
+                    dev_info.rf_baterry = Usart_Mgr.RXDBuf[8];
+                }
+
+                if (dev_info.rf_charge & 0x01) {
+                    dev_info.rf_baterry = 100;
+                }
+            } else {
+                if (dev_info.rf_state != RF_INVALID) {
+                    if (error_cnt >= 5) {
+                        error_cnt = 0;
+                        f_send_channel = 1;
+                    } else {
+                        error_cnt++;
+                    }
+                }
+            }
+
+            f_rf_sts_sysc_ok = 1;
+            break;
+        }
+
+        case CMD_READ_DATA: {
+            memcpy(func_tab, &Usart_Mgr.RXDBuf[4], FUNC_VALID_LEN);
+
+            if (func_tab[4] <= LINK_USB) {
+                dev_info.link_mode = func_tab[4];
+            }
+
+            if (func_tab[5] < LINK_USB) {
+                dev_info.rf_channel = func_tab[5];
+            }
+
+            if ((func_tab[6] <= LINK_BT_3) &&
+                (func_tab[6] >= LINK_BT_1)) {
+                dev_info.ble_channel = func_tab[6];
+            }
+
+            f_rf_read_data_ok = 1;
+            break;
+        }
+    }
+
+    Usart_Mgr.RXDLen = 0;
+    Usart_Mgr.RXDState = RX_Idle;
+    Usart_Mgr.RXDOverTime = 0;
+    return;
+
+invalid_frame:
+    Usart_Mgr.RXDLen = 0;
+    Usart_Mgr.RXDState = RX_Idle;
+    Usart_Mgr.RXDOverTime = 0;
+}
 /**
  * @brief  Uart send cmd.
  * @param  cmd: cmd.
@@ -621,15 +657,16 @@ void uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_s
  */
 void uart_receive_pro(void) {
     static bool rcv_start = false;
+    bool rx_overflow = false;
 
-    // Receiving serial data from RF module
+    /* Receive serial data from the RF module. */
     while (uart_available()) {
         rcv_start = true;
 
         if (Usart_Mgr.RXDLen >= UART_MAX_LEN) {
             uart_read();
-        }
-        else {
+            rx_overflow = true;
+        } else {
             Usart_Mgr.RXDBuf[Usart_Mgr.RXDLen++] = uart_read();
         }
 
@@ -638,15 +675,20 @@ void uart_receive_pro(void) {
         }
     }
 
-    // Processing received serial port protocol
+    /* Process the received frame once the UART becomes idle. */
     if (rcv_start) {
-        rcv_start          = false;
-        Usart_Mgr.RXDState = RX_Done;
-        RF_Protocol_Receive();
-        Usart_Mgr.RXDLen   = 0;
+        rcv_start = false;
+
+        if (rx_overflow) {
+            Usart_Mgr.RXDState = RX_OV_ERR;
+            Usart_Mgr.RXDLen = 0;
+            Usart_Mgr.RXDOverTime = 0;
+        } else {
+            Usart_Mgr.RXDState = RX_Done;
+            RF_Protocol_Receive();
+        }
     }
 }
-
 /**
  * @brief  RF uart initial.
  */
