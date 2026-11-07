@@ -33,9 +33,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 [1] = LAYOUT_ansi_84(
 	_______, 	KC_F1,  	KC_F2,  	KC_F3, 		KC_F4,  	KC_F5,  	KC_F6,  	KC_F7,  	KC_F8,  	KC_F9, 		KC_F10, 	KC_F11, 	KC_F12, 	MAC_PRT,	_______,	_______,
 	_______, 	LNK_BLE1,  	LNK_BLE2,  	LNK_BLE3,  	LNK_RF,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	_______, 				_______,	_______,
-	_______, 	_______,   	_______,   	_______,  	_______,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	DEV_RESET,	SLEEP_MODE, 			BAT_SHOW,	_______,
+	_______, 	_______,   	_______,   	_______,  	DEV_RESET,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	SLEEP_MODE, 			KC_BSLS,	_______,
 	_______,	MO(4),   	_______,   	_______,  	_______,   	_______,   	_______,	_______,   	_______,   	_______,  	_______,	_______, 	 						_______,	_______,
-	_______,				_______,   	_______,   	RGB_TEST,  	_______,	_______,	BAT_NUM,	MS_WIGL, 		RGB_SPD,	RGB_SPI,	_______,				_______,	RGB_VAI,	_______,
+	_______,				_______,   	_______,   	RGB_TEST,  	_______,	BAT_SHOW,	BAT_NUM,	MS_WIGL, 		RGB_SPD,	RGB_SPI,	_______,				_______,	RGB_VAI,	_______,
 	_______,	_______,	_______,										_______, 							_______,	MO(1),   	_______,				RGB_MOD,	RGB_VAD,    RGB_HUI),
 
 // layer win
@@ -51,9 +51,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 [3] = LAYOUT_ansi_84(
 	_______, 	KC_BRID,   	KC_BRIU,    _______,  	_______,   	_______,   	_______,   	KC_MPRV,   	KC_MPLY,   	KC_MNXT,  	KC_MUTE, 	KC_VOLD, 	KC_VOLU,	_______,	_______,	_______,
 	_______, 	LNK_BLE1,  	LNK_BLE2,  	LNK_BLE3,  	LNK_RF,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	_______, 				_______,	_______,
-	_______, 	_______,   	_______,   	_______,  	_______,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	DEV_RESET,	SLEEP_MODE, 			BAT_SHOW,	_______,
+	_______, 	_______,   	_______,   	_______,  	DEV_RESET,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	SLEEP_MODE, 			KC_BSLS,	_______,
 	_______,	MO(4),   	_______,   	_______,  	_______,   	_______,   	_______,	_______,   	_______,   	_______,  	_______,	_______, 	 						_______,	_______,
-	_______,				_______,   	_______,   	RGB_TEST,  	_______,	_______,	BAT_NUM,	MS_WIGL, 		RGB_SPD,	RGB_SPI,	_______,				_______,	RGB_VAI,	_______,
+	_______,				_______,   	_______,   	RGB_TEST,  	_______,	BAT_SHOW,	BAT_NUM,	MS_WIGL, 		RGB_SPD,	RGB_SPI,	_______,				_______,	RGB_VAI,	_______,
 	_______,	_______,	_______,										_______, 							_______,	MO(3),   	_______,				RGB_MOD,	RGB_VAD,    RGB_HUI),
 
 // layer 4
@@ -128,8 +128,8 @@ static void set_key_led(uint8_t row, uint8_t col, uint8_t red, uint8_t green, ui
 bool rgb_matrix_indicators_user(void) {
     const uint8_t white_r = 0x80, white_g = 0x80, white_b = 0x80;
 
-    // Keep the active mouse-wiggler key visibly marked even after Fn is released.
-    if (mouse_wiggler_enabled) {
+    // Fn + M is orange whenever either Fn layer is active; stays orange when wiggler is enabled.
+    if (mouse_wiggler_enabled || layer_state_is(1) || layer_state_is(3)) {
         set_key_led(4, 8, 0xFF, 0x80, 0x00);
     }
 
@@ -143,8 +143,10 @@ bool rgb_matrix_indicators_user(void) {
     }
     set_key_led(2, 14, white_r, white_g, white_b); // Mac print
     set_key_led(3, 1, white_r, white_g, white_b);  // Fn + A: extra layer
-    set_key_led(2, 12, white_r, white_g, white_b); // Sleep mode\n    set_key_led(2, 4, 0xFF, 0x00, 0x00); // Fn + R: device reset\n    set_key_led(2, 13, white_r, white_g, white_b); // Fn + backslash: type backslash / pipe
-    set_key_led(4, 4, white_r, white_g, white_b);  // RGB test
+    set_key_led(2, 12, white_r, white_g, white_b); // Fn + ]: sleep toggle
+    set_key_led(2, 4, 0xFF, 0x00, 0x00);           // Fn + R: reset (hold 3 seconds)
+    set_key_led(2, 13, white_r, white_g, white_b); // Fn + backslash: backslash / pipe
+    set_key_led(4, 4, white_r, white_g, white_b);  // Fn + C: RGB test (hold 3 seconds)
     set_key_led(4, 9, white_r, white_g, white_b);  // RGB speed
     set_key_led(4, 10, white_r, white_g, white_b); // RGB speed
     set_key_led(4, 14, white_r, white_g, white_b); // RGB value
@@ -157,15 +159,11 @@ bool rgb_matrix_indicators_user(void) {
     set_key_led(1, 2, 0x00, 0x40, 0xFF); // Bluetooth 2
     set_key_led(1, 3, 0x00, 0x40, 0xFF); // Bluetooth 3
     set_key_led(1, 4, 0xFF, 0x00, 0x00); // 2.4 GHz
-    set_key_led(2, 13, 0x00, 0xFF, 0x00); // Battery display
-    set_key_led(4, 7, 0x00, 0xFF, 0x00);  // Battery numbers
-    set_key_led(2, 11, 0xFF, 0x00, 0x00); // Device reset
+    set_key_led(4, 6, 0x00, 0xFF, 0x00); // Fn + B: battery display
+    set_key_led(4, 7, 0x00, 0xFF, 0x00); // Fn + N: battery numbers
 
-    if (mouse_wiggler_enabled) {
-        set_key_led(4, 8, 0xFF, 0x80, 0x00);
-    } else {
-        set_key_led(4, 8, white_r, white_g, white_b);
-    }
+    // Fn + M: orange while held; persistent orange when the wiggler is enabled.
+    set_key_led(4, 8, 0xFF, 0x80, 0x00);
 
     // The extra layer contains the side-light controls.
     if (layer_state_is(4)) {
