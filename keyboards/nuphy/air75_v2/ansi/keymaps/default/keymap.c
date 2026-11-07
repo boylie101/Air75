@@ -80,9 +80,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 mouse_wiggler_enabled = !mouse_wiggler_enabled;
                 mouse_wiggler_return_pending = false;
                 mouse_wiggler_timer = timer_read32();
-                if (!mouse_wiggler_enabled) {
+                if (!mouse_wiggler_enabled && mouse_wiggler_return_pending) {
                     report_mouse_t report = mousekey_get_report();
+                    report.x -= 5;
                     host_mouse_send(&report);
+                    mouse_wiggler_return_pending = false;
                 }
             }
             return false;
@@ -99,6 +101,7 @@ void housekeeping_task_user(void) {
     if (mouse_wiggler_return_pending) {
         if (timer_elapsed32(mouse_wiggler_return_timer) >= 50) {
             report_mouse_t report = mousekey_get_report();
+            report.x -= 5;
             host_mouse_send(&report);
             mouse_wiggler_return_pending = false;
         }
@@ -154,7 +157,7 @@ bool rgb_matrix_indicators_user(void) {
     set_key_led(1, 2, 0x00, 0x40, 0xFF); // Bluetooth 2
     set_key_led(1, 3, 0x00, 0x40, 0xFF); // Bluetooth 3
     set_key_led(1, 4, 0xFF, 0x00, 0x00); // 2.4 GHz
-    set_key_led(1, 13, 0x00, 0xFF, 0x00); // Battery display
+    set_key_led(2, 13, 0x00, 0xFF, 0x00); // Battery display
     set_key_led(4, 7, 0x00, 0xFF, 0x00);  // Battery numbers
     set_key_led(2, 11, 0xFF, 0x00, 0x00); // Device reset
 
