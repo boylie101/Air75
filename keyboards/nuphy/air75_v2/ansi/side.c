@@ -511,8 +511,8 @@ void rf_led_show(void) {
 
     if (rf_blink_cnt || (rf_link_show_time < RF_LINK_SHOW_TIME)) {
         if (dev_info.link_mode == LINK_RF_24) {
-            r_temp = 0x00;
-            g_temp = 0x80;
+            r_temp = 0x80;
+            g_temp = 0x00;
             b_temp = 0x00;
         } else if (dev_info.link_mode == LINK_USB) {
             r_temp = 0x80;
