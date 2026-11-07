@@ -567,17 +567,7 @@ void bat_num_led(uint8_t bat_percent)
 
 void num_led_show(void)
 {
-    static uint8_t num_bat_temp         = 0;
-    num_bat_temp         = dev_info.rf_baterry;
-    bat_num_led(num_bat_temp);
-}
-
-void bat_led_close(void)
-{
-    for(int i=20; i<=29; i++) {
-        rgb_matrix_set_color(i,0,0,0);
-    }
-
+    bat_num_led(dev_info.rf_baterry);
 }
 
 /**
