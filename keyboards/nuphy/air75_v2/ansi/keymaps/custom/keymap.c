@@ -78,8 +78,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case MS_WIGL:
             if (record->event.pressed) {
                 mouse_wiggler_enabled = !mouse_wiggler_enabled;
-                mouse_wiggler_return_pending = false;
                 mouse_wiggler_timer = timer_read32();
+
+                /*
+                 * If disabled during the short movement interval,
+                 * immediately return the pointer to its starting position.
+                 */
                 if (!mouse_wiggler_enabled && mouse_wiggler_return_pending) {
                     report_mouse_t report = mousekey_get_report();
                     report.x -= 5;
@@ -126,11 +130,16 @@ static void set_key_led(uint8_t row, uint8_t col, uint8_t red, uint8_t green, ui
 }
 
 bool rgb_matrix_indicators_user(void) {
-    const uint8_t white_r = 0x80, white_g = 0x80, white_b = 0x80;
+    const uint8_t white_r = 128, white_g = 128, white_b = 128;
+    const uint8_t purple_r = 128, purple_g = 0,   purple_b = 255;
+    const uint8_t red_r    = 255, red_g    = 0,   red_b    = 0;
+    const uint8_t blue_r   = 0,   blue_g   = 64,  blue_b   = 255;
+    const uint8_t green_r  = 0,   green_g  = 255, green_b  = 0;
+    const uint8_t orange_r = 255, orange_g = 128, orange_b = 0;
 
     // Fn + M is orange whenever either Fn layer is active; stays orange when wiggler is enabled.
     if (mouse_wiggler_enabled || layer_state_is(1) || layer_state_is(3)) {
-        set_key_led(4, 8, 0xFF, 0x80, 0x00);
+        set_key_led(4, 8, orange_r, orange_g, orange_b);
     }
 
     if (!(layer_state_is(1) || layer_state_is(3))) {
@@ -142,12 +151,11 @@ bool rgb_matrix_indicators_user(void) {
         set_key_led(0, col, white_r, white_g, white_b);
     }
     set_key_led(2, 14, white_r, white_g, white_b); // Mac print
-    set_key_led(3, 1, white_r, white_g, white_b);  // Fn + A: extra layer
-    set_key_led(3, 2, white_r, white_g, white_b); // Fn + S: sleep toggle
-    set_key_led(2, 4, 0xFF, 0x00, 0x00);           // Fn + R: reset (hold 3 seconds)
+    set_key_led(3, 1, purple_r, purple_g, purple_b);  // Fn + A: extra layer
+    set_key_led(3, 2, red_r, red_g, red_b); // Fn + S: sleep toggle
+    set_key_led(2, 4, red_r, red_g, red_b);           // Fn + R: reset (hold 3 seconds)
     set_key_led(2, 5, white_r, white_g, white_b);  // Fn + T: RGB test mode
-    set_key_led(2, 13, 0x00, 0x40, 0xFF);          // Fn + backslash: backslash / pipe (blue)
-    set_key_led(4, 4, white_r, white_g, white_b);  // Fn + C: RGB test (hold 3 seconds)
+    set_key_led(2, 13, blue_r, blue_g, blue_b);          // Fn + backslash: backslash / pipe (blue)
     set_key_led(4, 9, white_r, white_g, white_b);  // RGB speed
     set_key_led(4, 10, white_r, white_g, white_b); // RGB speed
     set_key_led(4, 14, white_r, white_g, white_b); // RGB value
@@ -156,15 +164,15 @@ bool rgb_matrix_indicators_user(void) {
     set_key_led(5, 15, white_r, white_g, white_b); // RGB hue
 
     // Wireless selection and battery functions.
-    set_key_led(1, 1, 0x00, 0x40, 0xFF); // Bluetooth 1
-    set_key_led(1, 2, 0x00, 0x40, 0xFF); // Bluetooth 2
-    set_key_led(1, 3, 0x00, 0x40, 0xFF); // Bluetooth 3
-    set_key_led(1, 4, 0xFF, 0x00, 0x00); // 2.4 GHz
-    set_key_led(4, 6, 0x00, 0xFF, 0x00); // Fn + B: battery display
-    set_key_led(4, 7, 0x00, 0xFF, 0x00); // Fn + N: battery numbers
+    set_key_led(1, 1, blue_r, blue_g, blue_b);       // Bluetooth 1
+    set_key_led(1, 2, blue_r, blue_g, blue_b);       // Bluetooth 2
+    set_key_led(1, 3, blue_r, blue_g, blue_b);       // Bluetooth 3
+    set_key_led(1, 4, red_r, red_g, red_b);          // 2.4 GHz
+    set_key_led(4, 6, green_r, green_g, green_b);    // Fn + B: battery display
+    set_key_led(4, 7, green_r, green_g, green_b);    // Fn + N: battery numbers
 
     // Fn + M: orange while held; persistent orange when the wiggler is enabled.
-    set_key_led(4, 8, 0xFF, 0x80, 0x00);
+    set_key_led(4, 8, orange_r, orange_g, orange_b);
 
     // The extra layer contains the side-light controls.
     if (layer_state_is(4)) {

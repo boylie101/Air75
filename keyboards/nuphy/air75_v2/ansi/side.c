@@ -423,19 +423,9 @@ static void side_breathe_mode_show(void) {
 
     light_point_playing(0, 1, BREATHE_TAB_LEN, &play_point);
 
-    if (0) {
-        if (play_point == 0) {
-            if (++side_play_point >= SIDE_COLOUR_MAX) side_play_point = 0;
-        }
-
-        r_temp = colour_lib[side_play_point][0];
-        g_temp = colour_lib[side_play_point][1];
-        b_temp = colour_lib[side_play_point][2];
-    } else {
-        r_temp = colour_lib[side_colour][0];
-        g_temp = colour_lib[side_colour][1];
-        b_temp = colour_lib[side_colour][2];
-    }
+    r_temp = colour_lib[side_colour][0];
+    g_temp = colour_lib[side_colour][1];
+    b_temp = colour_lib[side_colour][2];
 
     count_rgb_light(breathe_data_tab[play_point]);
     count_rgb_light(side_light_table[side_light]);
@@ -451,7 +441,6 @@ static void side_breathe_mode_show(void) {
  * @brief  side_static_mode_show.
  */
 static void side_static_mode_show(void) {
-    uint8_t play_index;
 
     if (side_play_cnt <= side_speed_table[side_mode][side_speed])
         return;
@@ -462,16 +451,9 @@ static void side_static_mode_show(void) {
     if (side_play_point >= SIDE_COLOUR_MAX) side_play_point = 0;
 
     for (int i = 0; i < SIDE_LINE; i++) {
-        if (0) {
-            r_temp = flow_rainbow_colour_tab[16 * i][0];
-            g_temp = flow_rainbow_colour_tab[16 * i][1];
-            b_temp = flow_rainbow_colour_tab[16 * i][2];
-            light_point_playing(0, 24, FLOW_COLOUR_TAB_LEN, &play_index);
-        } else {
-            r_temp = colour_lib[side_colour][0];
-            g_temp = colour_lib[side_colour][1];
-            b_temp = colour_lib[side_colour][2];
-        }
+        r_temp = colour_lib[side_colour][0];
+        g_temp = colour_lib[side_colour][1];
+        b_temp = colour_lib[side_colour][2];
 
         count_rgb_light(side_light_table[side_light]);
 
