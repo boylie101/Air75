@@ -46,7 +46,8 @@ enum custom_keycodes {
     BAT_SHOW,
     MAC_DND,
     BAT_NUM,
-    RGB_TEST
+    RGB_TEST,
+    MS_WIGL
 };
 
 typedef enum {
