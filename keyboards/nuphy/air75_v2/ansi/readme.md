@@ -1,4 +1,4 @@
-c# NuPhy Air75 V2
+# NuPhy Air75 V2
 
 *NuPhy Air75 V2 is a standard 84 key keyboard.*
 ![NuPhy Air75 V2](https://bit.ly/486pSkN)
