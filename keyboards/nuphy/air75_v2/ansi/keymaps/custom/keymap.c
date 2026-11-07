@@ -143,7 +143,7 @@ bool rgb_matrix_indicators_user(void) {
     }
     set_key_led(2, 14, white_r, white_g, white_b); // Mac print
     set_key_led(3, 1, white_r, white_g, white_b);  // Fn + A: extra layer
-    set_key_led(2, 12, white_r, white_g, white_b); // Sleep mode
+    set_key_led(2, 12, white_r, white_g, white_b); // Sleep mode\n    set_key_led(2, 4, 0xFF, 0x00, 0x00); // Fn + R: device reset\n    set_key_led(2, 13, white_r, white_g, white_b); // Fn + backslash: type backslash / pipe
     set_key_led(4, 4, white_r, white_g, white_b);  // RGB test
     set_key_led(4, 9, white_r, white_g, white_b);  // RGB speed
     set_key_led(4, 10, white_r, white_g, white_b); // RGB speed
