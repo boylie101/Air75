@@ -129,7 +129,7 @@ typedef enum {
 #define HOST_RF_TYPE            2
 
 #define LINK_TIMEOUT            (100 * 120)
-#define SLEEP_TIME_DELAY        (100 * 360)
+#define SLEEP_TIME_DELAY        (100 * 180)
 #define POWER_DOWN_DELAY        (24)
 
 #define RF_LONG_PRESS_DELAY     30
