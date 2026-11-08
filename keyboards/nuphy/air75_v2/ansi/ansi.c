@@ -119,7 +119,9 @@ void gpio_init(void) {
 void long_press_key(void) {
     static uint32_t long_press_timer = 0;
 
-    if (timer_elapsed32(long_press_timer) < 100) return;
+    if (timer_elapsed32(long_press_timer) < 100) {
+        return;
+    }
     long_press_timer = timer_read32();
 
     // Open a new RF device
@@ -137,7 +139,9 @@ void long_press_key(void) {
                 uart_send_cmd(CMD_NEW_ADV, 0, 1);
                 wait_ms(20);
                 uart_receive_pro();
-                if (f_rf_new_adv_ok) break;
+                if (f_rf_new_adv_ok) {
+                    break;
+                }
             }
         }
     } else {
@@ -233,7 +237,9 @@ void break_all_key(void) {
  * @param mode : link mode
  */
 void switch_dev_link(uint8_t mode) {
-    if (mode > LINK_USB) return;
+    if (mode > LINK_USB) {
+        return;
+    }
 
     break_all_key();
 
@@ -264,15 +270,21 @@ void dial_sw_scan(void) {
     static bool     f_first         = true;
 
     if (!f_first) {
-        if (timer_elapsed32(dial_scan_timer) < 20) return;
+        if (timer_elapsed32(dial_scan_timer) < 20) {
+            return;
+        }
     }
     dial_scan_timer = timer_read32();
 
     setPinInputHigh(DEV_MODE_PIN);
     setPinInputHigh(SYS_MODE_PIN);
 
-    if (readPin(DEV_MODE_PIN)) dial_scan |= 0X01;
-    if (readPin(SYS_MODE_PIN)) dial_scan |= 0X02;
+    if (readPin(DEV_MODE_PIN)) {
+        dial_scan |= 0X01;
+    }
+    if (readPin(SYS_MODE_PIN)) {
+        dial_scan |= 0X02;
+    }
 
     if (dial_save != dial_scan) {
         break_all_key();
@@ -341,15 +353,20 @@ void dial_sw_fast_scan(void) {
     setPinInputHigh(SYS_MODE_PIN);
 
     // Debounce to get a stable state
-    for(debounce=0; debounce<10; debounce++) {
+    for (debounce = 0; debounce < 10; debounce++) {
         dial_scan_dev = 0;
         dial_scan_sys = 0;
-        if (readPin(DEV_MODE_PIN))  dial_scan_dev = 0x01;
-        else                        dial_scan_dev = 0;
-        if (readPin(SYS_MODE_PIN))  dial_scan_sys = 0x01;
-        else                        dial_scan_sys = 0;
-        if((dial_scan_dev != dial_check_dev)||(dial_scan_sys != dial_check_sys))
-        {
+        if (readPin(DEV_MODE_PIN)) {
+            dial_scan_dev = 0x01;
+        } else {
+            dial_scan_dev = 0;
+        }
+        if (readPin(SYS_MODE_PIN)) {
+            dial_scan_sys = 0x01;
+        } else {
+            dial_scan_sys = 0;
+        }
+        if ((dial_scan_dev != dial_check_dev) || (dial_scan_sys != dial_check_sys)) {
             dial_check_dev = dial_scan_dev;
             dial_check_sys = dial_scan_sys;
             debounce = 0;
@@ -400,16 +417,23 @@ void timer_pro(void) {
         m_host_driver  = host_get_driver();
     }
 
-    if (timer_elapsed32(interval_timer) < 10)
+    if (timer_elapsed32(interval_timer) < 10) {
         return;
-    else
+    } else {
         interval_timer = timer_read32();
+    }
 
-    if (rf_link_show_time < RF_LINK_SHOW_TIME) rf_link_show_time++;
+    if (rf_link_show_time < RF_LINK_SHOW_TIME) {
+        rf_link_show_time++;
+    }
 
-    if (no_act_time < 0xffff) no_act_time++;
+    if (no_act_time < 0xffff) {
+        no_act_time++;
+    }
 
-    if (rf_linking_time < 0xffff) rf_linking_time++;
+    if (rf_linking_time < 0xffff) {
+        rf_linking_time++;
+    }
 }
 
 /**
@@ -439,14 +463,16 @@ void loading_eeprom_data(void) {
 
 /* qmk process record */
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
-    if(!process_record_user(keycode, record)){
+    if (!process_record_user(keycode, record)) {
         return false;
     }
     no_act_time = 0;
     switch (keycode) {
         case RF_DFU:
             if (record->event.pressed) {
-                if (dev_info.link_mode != LINK_USB) return false;
+                if (dev_info.link_mode != LINK_USB) {
+                    return false;
+                }
                 uart_send_cmd(CMD_RF_DFU, 10, 20);
             }
             return false;
@@ -600,9 +626,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     unregister_code(KC_S);
                     unregister_code(KC_LSFT);
                     unregister_code(KC_LGUI);
-                }
-
-                else {
+                } else {
                     register_code(KC_LGUI);
                     register_code(KC_LSFT);
                     register_code(KC_4);
@@ -661,7 +685,9 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
         case SLEEP_MODE:
             if (record->event.pressed) {
-                if(user_config.sleep_enable) user_config.sleep_enable = false;
+                if (user_config.sleep_enable) {
+                    user_config.sleep_enable = false;
+                }
                 else user_config.sleep_enable = true;
                 f_sleep_show       = 1;
                 eeconfig_update_user_datablock(&user_config);
@@ -698,10 +724,10 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
 bool rgb_matrix_indicators_kb(void)
 {
-    if(!rgb_matrix_indicators_user()){
+    if (!rgb_matrix_indicators_user()) {
         return false;
     }
-    if(f_bat_num_show) {
+    if (f_bat_num_show) {
         num_led_show();
     }
     rgb_matrix_set_color(RGB_MATRIX_LED_COUNT-1, 0, 0, 0);
