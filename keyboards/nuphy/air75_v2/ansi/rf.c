@@ -586,22 +586,22 @@ void UART_Send_Bytes(uint8_t *Buffer, uint32_t Length) {
         for (uint8_t i = 0; i < 3; i++) {
             writePinLow(NRF_WAKEUP_PIN);
             wait_us(50);
-        
+
             uart_transmit(Buffer, Length);
-        
+
             wait_us(50 + Length * 32);
-            writePinHigh(NRF_WAKEUP_PIN);  
-        
-            wait_us(200);      
-        }        
+            writePinHigh(NRF_WAKEUP_PIN);
+
+            wait_us(200);
+        }
     } else {
-            writePinLow(NRF_WAKEUP_PIN);
-            wait_us(50);
-        
-            uart_transmit(Buffer, Length);
-        
-            wait_us(50 + Length * 32);
-            writePinHigh(NRF_WAKEUP_PIN);          
+        writePinLow(NRF_WAKEUP_PIN);
+        wait_us(50);
+
+        uart_transmit(Buffer, Length);
+
+        wait_us(50 + Length * 32);
+        writePinHigh(NRF_WAKEUP_PIN);
     }
 }
 
