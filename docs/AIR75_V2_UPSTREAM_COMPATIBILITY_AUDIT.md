@@ -308,3 +308,26 @@ A temporary **draft-only, do-not-merge** pull request was created to ask GitHub 
 The PR files endpoint exposes only paginated portions of this unusually large diff; the sampled pages primarily show removals of existing upstream keyboard files. The PR mergeability response does not provide a definitive list of every conflicting path, so do not interpret `dirty` as a complete conflict report. The earlier source-overlap analysis still identifies `tmk_core/protocol/host.c` and `quantum/rgb_matrix/rgb_matrix_drivers.c` as important integration hotspots.
 
 **Action:** Do not merge PR #3. It is a test artifact, not a proposed integration. The intended strategy remains a clean upstream base plus a selective Air75 V2 port. No production branch was changed by this test.
+
+
+## 13. Conflict-path identification follow-up (2026-11-08)
+
+The two-sided tree comparison was revisited against the exact PR #3 base/head revisions. The only paths identified as modified on both sides of the common ancestor are the following, and GitHub independently reports the PR as `dirty` (not mergeable):
+
+| Path | Conflict assessment | Why it overlaps |
+|---|---|---|
+| `tmk_core/protocol/host.c` | **Confirmed conflict hotspot; treat as a merge conflict** | The baseline inserts NuPhy UART/RF forwarding into `host_keyboard_send`, `host_mouse_send`, `host_system_send` and `host_consumer_send`. Upstream rewrites these same send paths around active host-driver selection, Bluetooth routing and the newer report-driver API. These are overlapping edits, not merely adjacent changes. |
+| `quantum/rgb_matrix/rgb_matrix_drivers.c` | **Confirmed conflict hotspot; treat as a merge conflict** | The baseline adds the IS31FL3763 registration and a custom WS2812 buffer/flush implementation in the WS2812 driver section. Upstream has independently replaced/refactored that same WS2812 section to use the current `ws2812_init/flush/set_color/set_color_all` driver interface. The old custom implementation cannot be blindly combined with the new upstream block. |
+
+### What this identifies — and what it does not
+
+These are the **two exact overlapping paths from the ancestry/tree comparison** and the two paths that should be resolved first in any local merge simulation. GitHub's PR metadata confirms that at least one unresolved conflict exists, but the PR API does not return a machine-readable list of conflict filenames. Therefore this is a source-based identification of the conflict paths, not a claim that GitHub supplied a per-file conflict report or that a local `git merge-tree` was run.
+
+No other path was identified as modified on both sides in that comparison. Files that exist only in the NuPhy keyboard subtree are not same-path merge conflicts with upstream, although they still require the QMK API migrations documented above.
+
+### Resolution instructions
+
+1. Keep upstream `tmk_core/protocol/host.c`; discard the NuPhy core UART hooks. Reimplement RF/NKRO behaviour at the Air75 keyboard/host-driver layer.
+2. Keep the upstream WS2812 driver implementation in `quantum/rgb_matrix/rgb_matrix_drivers.c`. Port only the IS31FL3763 registration if the Air75 actually needs it and if the current upstream driver supports it; do not restore the old custom WS2812 implementation wholesale.
+3. After those choices, run a real local three-way merge/rebase or `git merge-tree` and inspect its conflict output before any integration PR is merged. Then build all Air75 targets/keymaps.
+
