@@ -129,7 +129,9 @@ void uart_send_report_func(void)
 {
     static uint32_t interval_timer = 0;
 
-    if (dev_info.link_mode == LINK_USB) return;
+    if (dev_info.link_mode == LINK_USB) {
+        return;
+    }
     keyboard_protocol          = 1;
 
     if (timer_elapsed32(interval_timer) > 50) {
@@ -488,7 +490,9 @@ uint8_t uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms) {
     if (wait_ack) {
         while (wait_ack--) {
             wait_ms(1);
-            if (f_uart_ack) return TX_OK;
+            if (f_uart_ack) {
+                return TX_OK;
+            }
         }
     } else {
         return TX_OK;
@@ -626,9 +630,15 @@ uint8_t get_checksum(uint8_t *buf, uint8_t len) {
  * @param report_size  report_size
  */
 void uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_size) {
-    if (f_dial_sw_init_ok == 0) return;
-    if (dev_info.link_mode == LINK_USB) return;
-    if (dev_info.rf_state != RF_CONNECT) return;
+    if (f_dial_sw_init_ok == 0) {
+        return;
+    }
+    if (dev_info.link_mode == LINK_USB) {
+        return;
+    }
+    if (dev_info.rf_state != RF_CONNECT) {
+        return;
+    }
 
     Usart_Mgr.TXDBuf[0] = UART_HEAD;
     Usart_Mgr.TXDBuf[1] = report_type;
@@ -715,7 +725,9 @@ void rf_device_init(void) {
         wait_ms(5);
         uart_receive_pro(); // receive data
         uart_receive_pro(); // parsing data
-        if (f_rf_hand_ok) break;
+        if (f_rf_hand_ok) {
+            break;
+        }
     }
 
     timeout           = 10;
@@ -725,7 +737,9 @@ void rf_device_init(void) {
         wait_ms(5);
         uart_receive_pro();
         uart_receive_pro();
-        if (f_rf_read_data_ok) break;
+        if (f_rf_read_data_ok) {
+            break;
+        }
     }
 
     timeout          = 10;
@@ -735,7 +749,9 @@ void rf_device_init(void) {
         wait_ms(5);
         uart_receive_pro();
         uart_receive_pro();
-        if (f_rf_sts_sysc_ok) break;
+        if (f_rf_sts_sysc_ok) {
+            break;
+        }
     }
 
     uart_send_cmd(CMD_SET_NAME, 10, 20);
