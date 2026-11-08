@@ -353,19 +353,20 @@ void dial_sw_fast_scan(void) {
     setPinInputHigh(SYS_MODE_PIN);
 
     // Debounce to get a stable state
-    for(debounce=0; debounce<10; debounce++) {
+    for (debounce = 0; debounce < 10; debounce++) {
         dial_scan_dev = 0;
         dial_scan_sys = 0;
         if (readPin(DEV_MODE_PIN)) {
             dial_scan_dev = 0x01;
+        } else {
+            dial_scan_dev = 0;
         }
-        else                        dial_scan_dev = 0;
         if (readPin(SYS_MODE_PIN)) {
             dial_scan_sys = 0x01;
+        } else {
+            dial_scan_sys = 0;
         }
-        else                        dial_scan_sys = 0;
-        if((dial_scan_dev != dial_check_dev)||(dial_scan_sys != dial_check_sys))
-        {
+        if ((dial_scan_dev != dial_check_dev) || (dial_scan_sys != dial_check_sys)) {
             dial_check_dev = dial_scan_dev;
             dial_check_sys = dial_scan_sys;
             debounce = 0;
@@ -462,7 +463,7 @@ void loading_eeprom_data(void) {
 
 /* qmk process record */
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
-    if(!process_record_user(keycode, record)){
+    if (!process_record_user(keycode, record)) {
         return false;
     }
     no_act_time = 0;
@@ -625,9 +626,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     unregister_code(KC_S);
                     unregister_code(KC_LSFT);
                     unregister_code(KC_LGUI);
-                }
-
-                else {
+                } else {
                     register_code(KC_LGUI);
                     register_code(KC_LSFT);
                     register_code(KC_4);
@@ -725,10 +724,10 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
 
 bool rgb_matrix_indicators_kb(void)
 {
-    if(!rgb_matrix_indicators_user()){
+    if (!rgb_matrix_indicators_user()) {
         return false;
     }
-    if(f_bat_num_show) {
+    if (f_bat_num_show) {
         num_led_show();
     }
     rgb_matrix_set_color(RGB_MATRIX_LED_COUNT-1, 0, 0, 0);
