@@ -37,7 +37,86 @@ These are the positions recorded at the time of writing. Re-check branch heads b
 
 The NuPhy fork is abandoned, so continuing to treat it as the long-term upstream is not a good strategy. The migration should use official QMK master as its base and explicitly account for the changes accumulated since the fork diverged.
 
-The current port branch is still a clean QMK starting point. The compatibility items below are **known areas to investigate**, not claims that fixes have already been implemented or validated.
+The port branch began as a clean QMK starting point. A previous audit has already identified concrete compatibility issues and risks (documented below), but no Air75 port implementation or hardware validation had yet been completed.
+
+## Work already completed in the previous baseline audit
+
+**Important correction:** the initial version of this document understated the work already done. The previous `Clean Up QMK Baseline` investigation had completed a meaningful source/API compatibility review and identified ten scheduled QMK breaking-change release windows from February 2024 through August 2026. This was an audit, not an implementation or hardware-validation pass.
+
+### Branch and repository checks already performed
+
+At the time of the previous audit:
+
+- `baseline` was at `3ceeacff` and had not been changed.
+- `air75-v2-qmk-style` was at `e73e42f7`, 16 commits ahead, with style cleanup awaiting a local build.
+- `qmk-master` and `air75-v2-qmk-port` were both at `f5db9621`.
+- The port branch was a clean QMK checkout with no Air75 keyboard files copied into it yet.
+- No firmware files had been changed, copied, committed, pushed or merged as part of that audit.
+
+The documentation commit now advances `air75-v2-qmk-port`; re-check live branch heads for current positions.
+
+### Concrete compatibility findings
+
+| Area | Finding from the previous audit | Status |
+| --- | --- | --- |
+| EEPROM API | Existing EEPROM datablock calls in Air75 `ansi.c` / `side.c` use the old call shape. Current QMK expects the pointer, offset and length form: `(ptr, 0, sizeof(...))`. | Identified; not ported |
+| EEPROM magic/layout | Legacy magic was `0xFEE5`; current QMK uses `0xFEE3`. The core EEPROM structure has shifted. Existing side-light settings may therefore be reset rather than safely retained across the change. | Risk identified; migration/reset policy still required |
+| UART | Legacy configuration uses `SERIAL_DRIVER SD1`, `SD1_TX_PIN B6`, `SD1_RX_PIN B7` and PAL mode definitions. Current configuration needs the unified `UART_DRIVER` / `UART_TX_PIN` / `UART_RX_PIN` style, with correct driver/pin setup. | Identified; not ported |
+| ChibiOS UART | USART1/HAL appeared to be a suitable direction for the Air75 UART configuration. This was a compatibility assessment, not a hardware-verified result. | Candidate; verify during port |
+| GPIO | Removed GPIO helper/functions were identified as an upstream compatibility concern. | Requires file-by-file replacement review |
+| RGB/keycodes | Legacy RGB and mouse-related keycodes were among the removed/deprecated keycode interfaces identified in the release audit. | Requires Air75 keymap/code mapping review |
+| Keyboard protocol | The old `keyboard_protocol` interface was identified as removed. | Requires search and replacement review |
+| VIA | VIA support itself was not identified as a blocker. Migration to the current community-module arrangement still needs planning and validation. | Partially assessed |
+| HID | No direct HID conflict was found in the checks performed. This is not proof that all report paths are compatible. | No issue found in reviewed scope |
+| RF / NKRO | RF packet length/report handling and NKRO interactions had not yet been fully reviewed. | Outstanding |
+| Bluetooth host driver | Upstream `host_driver_t` / Bluetooth host-driver changes were identified as an area requiring review. | Outstanding |
+
+### Upstream breaking-change release windows reviewed
+
+The previous investigation identified the ten scheduled release-note windows below as the chronological audit range:
+
+- February, May and August 2024
+- February, May, August and November 2025
+- February, May and August 2026
+
+The Air75-relevant change themes extracted during that review included:
+
+- Asynchronous ChibiOS USB changes.
+- I2C and LED API changes.
+- Deprecated/removed Quantum keycodes.
+- Unified UART configuration.
+- EEPROM/NVM architecture and layout changes.
+- Bluetooth `host_driver_t` changes.
+- Bluetooth NKRO/reporting changes.
+- Removal of `process_action_kb`.
+- Removed RGB and mouse-related keycodes.
+- VIA matrix-testing mitigation/workflow changes.
+- Tap Dance API changes.
+- Removed GPIO functions.
+
+This list is the recorded audit summary, not a claim that every item affects the Air75 V2. Each theme must be matched against the actual Air75 source and the relevant upstream release/commit before changing code. Do not infer that a change is applicable merely because it appears in the release notes.
+
+### Checks and source areas already inspected
+
+The earlier investigation compared the current and legacy EEPROM interfaces, inspected UART configuration and driver definitions, and reviewed the relevant ChibiOS, LED/RGB, VIA, HID, NKRO and RF areas. The concrete Air75 call-site findings above include `ansi.c` and `side.c`. The exact command transcript was not preserved in the recovered summary, so this document deliberately records verified outcomes rather than inventing command lines.
+
+### Corrected status
+
+The audit is **partially completed**, not "Not started":
+
+- [x] Confirmed branch separation and clean upstream starting point.
+- [x] Identified ten scheduled QMK breaking-change release windows for review.
+- [x] Identified EEPROM API and data-layout/reset risk.
+- [x] Identified legacy UART configuration requiring migration.
+- [x] Identified GPIO, RGB/keycode and keyboard-protocol compatibility areas.
+- [x] Checked VIA/HID at a preliminary level; no direct HID conflict found and VIA itself was not considered blocked.
+- [ ] Complete exact upstream-to-fork ancestry and commit-range mapping.
+- [ ] Match every potentially relevant release-note change to specific Air75 V2 files and symbols.
+- [ ] Review RF packet lengths and NKRO/report interactions.
+- [ ] Complete Bluetooth host-driver and wireless compatibility review.
+- [ ] Complete ChibiOS USB/driver compatibility review.
+- [ ] Implement the port, compile, and perform hardware validation.
+
 
 ## Priority order
 
@@ -122,7 +201,7 @@ Use these labels in follow-up updates:
 - `Hardware verified` — behaviour has been tested on the actual Air75 V2.
 - `Blocked` — waiting on information, hardware or a decision.
 
-At the time of this snapshot, the upstream port itself is **Not started**. EEPROM, UART, RF/wireless and NKRO are identified audit/compatibility priorities; they must not be represented as fixed or tested yet.
+At the time of the previous audit, the implementation port was **Not started**, but the compatibility audit was **partially completed**. EEPROM and UART issues were specifically identified; GPIO/keycode/protocol changes were flagged; RF/NKRO, Bluetooth host-driver and parts of the ChibiOS review remained outstanding. None of these findings should be represented as fixed or hardware-tested.
 
 ---
 
