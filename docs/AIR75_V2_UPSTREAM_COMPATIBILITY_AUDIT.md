@@ -445,3 +445,38 @@ The public USB wake API and asynchronous endpoint/event handling must be tested 
 - [ ] Test custom keycodes, mouse-wiggle, all radio profiles, and USB suspend/wake on actual hardware.
 
 These are additional source-derived requirements and runtime test risks. They do not change the earlier audit boundary: no build or hardware validation has been performed as part of this documentation update.
+
+
+---
+
+## 15. Initial port implementation status (2026-11-08)
+
+The first import of the Air75 V2 keyboard subtree is present on `air75-v2-qmk-port`. Files imported include the keyboard metadata, hardware configuration, ChibiOS configuration overrides, keyboard header/source, RF transport and host driver, side-light implementation/driver, sleep handling, and the three baseline keymaps.
+
+Compatibility edits applied in this first pass:
+
+- Legacy GPIO API aliases replaced with current `gpio_*` calls.
+- User EEPROM datablock operations updated to the current three-argument API, preserving the existing eight-byte allocation and offset zero.
+- UART driver and pin macros migrated to the current `UART_*` names.
+- Deprecated RGB Matrix keycodes in keymaps replaced with current `RM_*` equivalents.
+- Unsupported `usb_lld_wakeup_host()` call removed; public `usbWakeupHost()` and `restart_usb_driver()` retained for testing.
+- Removed references to the old `keyboard_protocol` global, which current QMK no longer exposes; the USB stack owns protocol state.
+- Main RGB Matrix WS2812 transport explicitly configured to use PWM; deprecated DMA macro names replaced by current `WS2812_PWM_DMA_*` names.
+- Restored the VIA-specific `VIA_ENABLE = yes` keymap rule after importing the keymap.
+
+### Verification status
+
+<badge color="warning">Not yet build-verified</badge>
+
+No local QMK build, QMK lint, GitHub Actions build or hardware test has been run. Presence of the source files and static API substitutions must not be interpreted as a successful compile. The next required step is to build `default`, `custom` and `via` keymaps against the exact branch revision, fix compiler errors, and review all warnings.
+
+The following areas remain deliberately unresolved pending build/hardware evidence:
+
+1. UART parity and word-length configuration is still applied by direct USART1 CR1 manipulation after `uart_init()`; verify the module framing and migrate to supported UART configuration if safe.
+2. RF parser exact-length assumptions, receive-idle timing and triple retransmission policy remain unchanged apart from API compatibility.
+3. Side WS2812 bit-banging still disables interrupts for the full transfer; measure impact on RF UART reception.
+4. USB remote wake/restart sequence has not been exercised on the Air75 hardware.
+5. EEPROM first-boot/reset behaviour on the new QMK NVM layout has not been verified.
+6. The branch base is still QMK `f5db9621`, two upstream documentation commits behind the observed `d194c077` HEAD. Synchronise before treating this as the final upstream base.
+
+Do not flash this first-pass port until all intended keymaps compile and the RF, lighting, USB and persistence paths have been reviewed.
