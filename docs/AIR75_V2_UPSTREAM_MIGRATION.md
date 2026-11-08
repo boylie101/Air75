@@ -26,10 +26,10 @@ The goal is a maintainable upstream-based port, not simply a successful compile.
 
 | Branch | Recorded position | Role / status |
 | --- | --- | --- |
-| `baseline` | `3ceeacff` | Protected known-good working baseline. |
-| `air75-v2-qmk-style` | `e73e42f7` | Formatting/style cleanup; awaiting a local build. |
-| `qmk-master` | `f5db9621` | Clean official QMK master snapshot. |
-| `air75-v2-qmk-port` | `f5db9621` | Migration work branch; Air75 porting work has not yet started. |
+| `baseline` | `98396e9a` | Protected known-good baseline; includes the style-cleanup merge (PR #2). |
+| `air75-v2-qmk-style` | `e73e42f7` (historical head at merge) | Preserved source branch; its firmware was built/flashed successfully by the user before merge. Keep as historical reference. |
+| `qmk-master` | `f5db9621` | Clean official QMK snapshot from 2026-10-29; needs fast-forward to current upstream. |
+| `air75-v2-qmk-port` | Documentation-only commits after `f5db9621` | Isolated migration branch; firmware port has not started. |
 
 These are the positions recorded at the time of writing. Re-check branch heads before relying on the abbreviated SHAs.
 
@@ -47,13 +47,13 @@ The port branch began as a clean QMK starting point. A previous audit has alread
 
 At the time of the previous audit:
 
-- `baseline` was at `3ceeacff` and had not been changed.
-- `air75-v2-qmk-style` was at `e73e42f7`, 16 commits ahead, with style cleanup awaiting a local build.
+- `baseline` was advanced by PR #2 to merge the tested style-cleanup branch; its recorded merge commit is `98396e9acd96a41b0603592cf17bddc9d451f68e`.
+- `air75-v2-qmk-style` was at `e73e42f7`, 16 commits ahead; the user subsequently built/flashed that firmware successfully and it was merged into `baseline` through PR #2.
 - `qmk-master` and `air75-v2-qmk-port` were both at `f5db9621`.
 - The port branch was a clean QMK checkout with no Air75 keyboard files copied into it yet.
 - No firmware files had been changed, copied, committed, pushed or merged as part of that audit.
 
-The documentation commit now advances `air75-v2-qmk-port`; re-check live branch heads for current positions.
+The migration notes and compatibility audit have since been expanded in documentation-only commits. The port branch still contains no Air75 firmware implementation. Re-check live branch heads before any code changes.
 
 ### Concrete compatibility findings
 
@@ -293,3 +293,16 @@ At the time of this update, official QMK master is `d194c077ed964195ec16d255c7a4
 7. Build all intended keymaps and record USB, RF, Bluetooth, lighting, sleep/wake and persistence hardware results.
 
 No firmware source was changed by this documentation update.
+
+## Documentation update record (2026-11-08)
+
+Two documentation-only updates were committed to `air75-v2-qmk-port` after the original audit:
+
+- `aec692946e3882c1eafae5deaf16a7ead0afa64f` — expanded migration inventory, hardware pin map, keyboard definition invariants, RF framing/retry risks, side LED/UART timing risk, EEPROM policy and staged port sequence.
+- `3ad4e0cdbe8f5abbc8ff53a455124b9824fc2e97` — added the corresponding source-level findings and explicit validation gates to the compatibility audit.
+
+Neither commit changes firmware source. The port remains documentation-only.
+
+### Test-only mergeability PR
+
+PR #3 (`baseline` → `qmk-master`) was created solely to ask GitHub to calculate mergeability. GitHub reported it as `dirty` / not mergeable, and the diff is an unsuitable wholesale fork-to-upstream comparison. **Do not merge PR #3.** It is not the intended migration PR. Close it once its mergeability evidence is no longer needed; the intended port remains a selective Air75 keyboard-subtree migration from a clean upstream base.
