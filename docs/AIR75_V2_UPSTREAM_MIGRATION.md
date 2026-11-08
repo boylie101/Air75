@@ -306,3 +306,41 @@ Neither commit changes firmware source. The port remains documentation-only.
 ### Test-only mergeability PR
 
 PR #3 (`baseline` → `qmk-master`) was created solely to ask GitHub to calculate mergeability. GitHub reported it as `dirty` / not mergeable, and the diff is an unsuitable wholesale fork-to-upstream comparison. **Do not merge PR #3.** It is not the intended migration PR. Close it once its mergeability evidence is no longer needed; the intended port remains a selective Air75 keyboard-subtree migration from a clean upstream base.
+
+
+## Initial firmware import status (2026-11-08)
+
+The first source-import pass has now been committed to `air75-v2-qmk-port`. The keyboard subtree exists at `keyboards/nuphy/air75_v2/ansi/` with:
+
+- `keyboard.json`, `config.h`, `mcuconf.h`, `halconf.h`;
+- `ansi.h`, `ansi.c`, `rf.c`, `rf_driver.c`, `rf_driver.h`;
+- `side.c`, `side_driver.c`, `sleep.c`, and keyboard `rules.mk`;
+- `default`, `custom`, and `via` keymaps, with VIA enabled only in the VIA keymap rules.
+
+### Compatibility edits already applied
+
+- Migrated the legacy GPIO helper names to current `gpio_*` functions in the imported C sources.
+- Migrated user EEPROM datablock reads/writes to the current pointer/offset/length signatures, preserving offset zero and the eight-byte user payload.
+- Replaced old UART pin/driver macros with `UART_DRIVER`, `UART_TX_PIN`, `UART_RX_PIN` and their PAL mode settings.
+- Replaced removed RGB Matrix keycodes in the imported keymaps with current `RM_*` keycodes.
+- Removed the call to the no-longer-present low-level `usb_lld_wakeup_host()`; the existing public `usbWakeupHost()` and restart path remain for hardware validation.
+- Removed assignments to the old global `keyboard_protocol`, which is no longer an exposed global in current QMK; USB protocol state is managed by the current USB stack.
+- Selected the PWM WS2812 transport in the keyboard metadata and updated the DMA configuration macro names.
+
+### Important current limitations
+
+This is an initial source-import and compatibility pass, **not a completed or verified port**. No QMK compilation, lint, CI build or hardware test has been run from this environment. The branch must not be flashed yet.
+
+The port branch is based on QMK commit `f5db962110615fd263c3ebf9f0402e7c2b08fbe4`; current official master was observed at `d194c077ed964195ec16d255c7a4b89a794cf03b`, two upstream commits ahead. Those intervening commits are documentation changes; synchronise the branch to current upstream before finalising the port base.
+
+### Immediate next verification
+
+Run these builds from the QMK checkout after pulling `air75-v2-qmk-port`:
+
+```sh
+qmk compile -kb nuphy/air75_v2/ansi -km default
+qmk compile -kb nuphy/air75_v2/ansi -km custom
+qmk compile -kb nuphy/air75_v2/ansi -km via
+```
+
+Record the first complete compiler output for each keymap. Fix compiler errors in dependency order, without changing RF retry/framing semantics or hardware pin assignments merely to silence warnings. Once all three compile, inspect the generated configuration and binary sizes before proceeding to hardware validation.
