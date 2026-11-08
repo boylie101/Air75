@@ -37,7 +37,9 @@ void sleep_handle(void) {
     static uint32_t rf_disconnect_time = 0;
 
     /* 50ms interval */
-    if (timer_elapsed32(delay_step_timer) < 50) return;
+    if (timer_elapsed32(delay_step_timer) < 50) {
+        return;
+    }
     delay_step_timer = timer_read32();
 
     // sleep process
