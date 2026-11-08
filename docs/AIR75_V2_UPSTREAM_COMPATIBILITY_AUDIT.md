@@ -289,3 +289,22 @@ The Air75 V2 keyboard subtree is fork-side content not independently changed by 
 ### Verification boundary
 
 This is a branch-ancestry and three-way changed-path/source-overlap audit. **No actual Git merge, rebase, merge-tree test, or temporary merge PR was executed.** Therefore it identifies likely conflict areas and integration hazards, but does not claim a definitive Git mergeability result. No production branch was merged or rewritten.
+
+
+---
+
+## 12. GitHub pull-request mergeability test (2026-11-08)
+
+A temporary **draft-only, do-not-merge** pull request was created to ask GitHub to calculate mergeability:
+
+- PR: [#3 — TEST ONLY: baseline → qmk-master](https://github.com/boylie101/Air75/pull/3)
+- Base branch: `qmk-master`, base SHA `f5db962110615fd263c3ebf9f0402e7c2b08fbe4`
+- Head branch: `baseline`, head SHA `98396e9acd96a41b0603592cf17bddc9d451f68e`
+- GitHub result: `mergeable=false`, `mergeable_state=dirty`
+- PR comparison reported 64 commits, 23,705 changed files, 4,771 additions and 1,562,183 deletions.
+
+**Conclusion:** GitHub confirms that a wholesale merge of `baseline` into `qmk-master` is not cleanly mergeable. The enormous diff also confirms that this is not a sensible way to port the Air75: it proposes a very large amount of fork/upstream tree replacement, not just the Air75 keyboard changes.
+
+The PR files endpoint exposes only paginated portions of this unusually large diff; the sampled pages primarily show removals of existing upstream keyboard files. The PR mergeability response does not provide a definitive list of every conflicting path, so do not interpret `dirty` as a complete conflict report. The earlier source-overlap analysis still identifies `tmk_core/protocol/host.c` and `quantum/rgb_matrix/rgb_matrix_drivers.c` as important integration hotspots.
+
+**Action:** Do not merge PR #3. It is a test artifact, not a proposed integration. The intended strategy remains a clean upstream base plus a selective Air75 V2 port. No production branch was changed by this test.
