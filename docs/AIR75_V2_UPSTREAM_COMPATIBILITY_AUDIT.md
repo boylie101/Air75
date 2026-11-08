@@ -451,7 +451,7 @@ These are additional source-derived requirements and runtime test risks. They do
 
 ## 15. Initial port implementation status (2026-11-08)
 
-The first import of the Air75 V2 keyboard subtree is present on `air75-v2-qmk-port`. Files imported include the keyboard metadata, hardware configuration, ChibiOS configuration overrides, keyboard header/source, RF transport and host driver, side-light implementation/driver, sleep handling, and the three baseline keymaps.
+The first import of the Air75 V2 keyboard subtree is present on `air75-v2-qmk-port`. Files imported include the keyboard metadata, hardware configuration, ChibiOS configuration overrides, keyboard header/source, RF transport and host driver, side-light implementation, lookup-table header, driver, sleep handling, and the three baseline keymaps.
 
 Compatibility edits applied in this first pass:
 
@@ -461,6 +461,7 @@ Compatibility edits applied in this first pass:
 - Deprecated RGB Matrix keycodes in keymaps replaced with current `RM_*` equivalents.
 - Unsupported `usb_lld_wakeup_host()` call removed; public `usbWakeupHost()` and `restart_usb_driver()` retained for testing.
 - Removed references to the old `keyboard_protocol` global, which current QMK no longer exposes; the USB stack owns protocol state.
+- Added the local side-light lookup-table header and an explicit HAL include for direct USART1 register access.
 - Main RGB Matrix WS2812 transport explicitly configured to use PWM; deprecated DMA macro names replaced by current `WS2812_PWM_DMA_*` names.
 - Restored the VIA-specific `VIA_ENABLE = yes` keymap rule after importing the keymap.
 
