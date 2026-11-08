@@ -35,7 +35,7 @@ These are the positions recorded at the time of writing. Re-check branch heads b
 
 ## Current assessment
 
-The NuPhy fork is abandoned, so continuing to treat it as the long-term upstream is not a good strategy. The migration should use official QMK master as its base and explicitly account for the changes accumulated since the fork diverged.
+The NuPhy fork is abandoned, so continuing to treat it as the long-term upstream is not a good strategy. The migration should use official QMK master as its base and explicitly account for the changes accumulated since the fork diverged. The exact common ancestor is 260e9a546ebf (2024-06-06); the detailed audit covers the nine subsequent scheduled breaking-change releases through 2026-08-30.
 
 The port branch began as a clean QMK starting point. A previous audit has already identified concrete compatibility issues and risks (documented below), but no Air75 port implementation or hardware validation had yet been completed.
 
@@ -124,7 +124,7 @@ The audit is **partially completed**, not "Not started":
 
 - Identify the exact NuPhy fork commit/revision from which the Air75 V2 implementation originates.
 - Compare that point with the current `qmk-master` snapshot.
-- Build a chronological inventory of relevant QMK breaking changes and API migrations across the full divergence period; do not stop at the first compile errors.
+- The full static compatibility audit is recorded in [AIR75_V2_UPSTREAM_COMPATIBILITY_AUDIT.md](AIR75_V2_UPSTREAM_COMPATIBILITY_AUDIT.md). Use that audit as the checklist; do not stop at the first compile errors.
 - Separate changes that affect the Air75 V2 code from unrelated upstream changes.
 - Record each finding with affected file/API, upstream change or rationale, proposed adaptation, and verification status.
 
@@ -185,8 +185,8 @@ Do not mark a behaviour as tested unless it has actually been tested on hardware
 ## Immediate next actions
 
 1. Confirm the exact NuPhy fork ancestor/revision and the current upstream base.
-2. Produce a full, file-scoped divergence and breaking-change audit.
-3. Start with EEPROM compatibility and UART configuration, while keeping RF/NKRO as explicit parallel audit areas.
+2. Use the completed [Air75 V2 upstream compatibility audit](AIR75_V2_UPSTREAM_COMPATIBILITY_AUDIT.md) as the file-scoped port checklist.
+3. Start with EEPROM and GPIO API updates, then RGB keycode and UART configuration migrations; design the RF/NKRO host-capability integration before implementing report routing.
 4. Port incrementally on `air75-v2-qmk-port`; keep `baseline` untouched.
 5. Build, review and test in stages before any firmware flash.
 
