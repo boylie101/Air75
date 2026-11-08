@@ -46,7 +46,7 @@ void sleep_handle(void) {
     if (f_goto_sleep) {
         f_goto_sleep = 0;
 
-        if(user_config.sleep_enable) {
+        if (user_config.sleep_enable) {
             if (dev_info.rf_state == RF_CONNECT) {
                 uart_send_cmd(CMD_SET_CONFIG, 5, 5);
             } else {
