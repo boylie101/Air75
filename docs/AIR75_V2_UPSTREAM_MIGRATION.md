@@ -353,9 +353,9 @@ The user flashed the `custom` keymap and reported brief testing on an Air75 V2:
 
 - USB typing works.
 - Main lighting and side lighting work.
-- Lighting/settings appear to persist after powering the keyboard off and back on.
+- Main and side-light settings persist after powering the keyboard off and back on.
 - Bluetooth works.
 - Mouse wiggler works.
 - The keyboard sleeps and wakes again.
 
-This is initial user-reported hardware verification, not a full regression pass. The tested Bluetooth profile(s), RF/2.4 GHz mode, detailed persistence coverage, and sleep/wake across each connection mode were not specified. The user subsequently confirmed six simultaneous keys in Mac mode and more than six in Windows mode over Bluetooth, verifying intended 6KRO/NKRO behavior in that tested configuration. Continue testing RF/2.4 GHz, all Bluetooth profiles, consumer/system reports, repeated mouse movement, extended idle/suspend and wake cycles, and settings persistence after repeated power cycles. VIA firmware was build-verified but was not part of this hardware test.
+This is user-reported hardware verification, not a full regression pass. The tested Bluetooth profile(s), RF/2.4 GHz mode, and sleep/wake across each connection mode were not specified. The user confirmed that main and side-light settings persist through power cycling. They also confirmed six simultaneous keys in Mac mode and more than six in Windows mode over Bluetooth, verifying intended 6KRO/NKRO behavior in that tested configuration. Next, test RF/2.4 GHz, other Bluetooth profiles, consumer/system reports, repeated mouse movement, and extended idle/suspend and wake cycles. VIA firmware was build-verified but was not part of this hardware test.

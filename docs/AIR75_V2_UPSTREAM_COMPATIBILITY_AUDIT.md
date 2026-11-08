@@ -473,7 +473,7 @@ On 2026-11-08, `default`, `custom` and `via` all compiled successfully from the 
 
 ### Initial hardware observations (2026-11-08)
 
-The user reports that, after flashing the custom keymap, USB typing, main and side lighting, Bluetooth, mouse wiggler, and keyboard sleep/wake all work in brief testing. Lighting/settings also appeared to persist through a power cycle. The user additionally confirmed six simultaneous keys in Mac mode and more than six in Windows mode over Bluetooth, verifying intended 6KRO/NKRO behavior in that tested configuration. RF/2.4 GHz, Bluetooth profile coverage, other report classes, longer sleep/wake cycles, and repeated persistence cycles remain unverified.
+The user reports that, after flashing the custom keymap, USB typing, main and side lighting, Bluetooth, mouse wiggler, and keyboard sleep/wake all work in brief testing. The user confirmed that main and side-light settings persist through power cycling. They also confirmed six simultaneous keys in Mac mode and more than six in Windows mode over Bluetooth, verifying intended 6KRO/NKRO behavior in that tested configuration. RF/2.4 GHz, Bluetooth profile coverage, other report classes, and longer sleep/wake cycles remain unverified.
 
 The following areas remain deliberately unresolved pending build/hardware evidence:
 
