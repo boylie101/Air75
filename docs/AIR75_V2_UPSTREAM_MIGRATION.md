@@ -41,7 +41,7 @@ The port branch began as a clean QMK starting point. A previous audit has alread
 
 ## Work already completed in the previous baseline audit
 
-**Important correction:** the initial version of this document understated the work already done. The previous `Clean Up QMK Baseline` investigation had completed a meaningful source/API compatibility review and identified ten scheduled QMK breaking-change release windows from February 2024 through August 2026. This was an audit, not an implementation or hardware-validation pass.
+**Important correction:** the initial version of this document understated the work already done. The previous `Clean Up QMK Baseline` investigation had completed a meaningful source/API compatibility review and identified the scheduled QMK breaking-change release windows after the 2024-06-06 merge-base through August 2026. This was an audit, not an implementation or hardware-validation pass.
 
 ### Branch and repository checks already performed
 
@@ -73,9 +73,9 @@ The migration notes and compatibility audit have since been expanded in document
 
 ### Upstream breaking-change release windows reviewed
 
-The previous investigation identified the ten scheduled release-note windows below as the chronological audit range:
+The previous investigation identified nine scheduled release-note windows after the 2024-06-06 merge-base:
 
-- February, May and August 2024
+- August and November 2024
 - February, May, August and November 2025
 - February, May and August 2026
 
@@ -105,7 +105,7 @@ The earlier investigation compared the current and legacy EEPROM interfaces, ins
 The audit is **partially completed**, not "Not started":
 
 - [x] Confirmed branch separation and clean upstream starting point.
-- [x] Identified ten scheduled QMK breaking-change release windows for review.
+- [x] Identified the nine post-merge-base QMK breaking-change release windows for review.
 - [x] Identified EEPROM API and data-layout/reset risk.
 - [x] Identified legacy UART configuration requiring migration.
 - [x] Identified GPIO, RGB/keycode and keyboard-protocol compatibility areas.
