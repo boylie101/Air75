@@ -314,7 +314,7 @@ The first source-import pass has now been committed to `air75-v2-qmk-port`. The 
 
 - `keyboard.json`, `config.h`, `mcuconf.h`, `halconf.h`;
 - `ansi.h`, `ansi.c`, `rf.c`, `rf_driver.c`, `rf_driver.h`;
-- `side.c`, `side_driver.c`, `sleep.c`, and keyboard `rules.mk`;
+- `side.c`, `side_table.h`, `side_driver.c`, `sleep.c`, and keyboard `rules.mk`;
 - `default`, `custom`, and `via` keymaps, with VIA enabled only in the VIA keymap rules.
 
 ### Compatibility edits already applied
