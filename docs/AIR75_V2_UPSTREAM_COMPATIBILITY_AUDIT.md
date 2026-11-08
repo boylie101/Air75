@@ -331,3 +331,117 @@ No other path was identified as modified on both sides in that comparison. Files
 2. Keep the upstream WS2812 driver implementation in `quantum/rgb_matrix/rgb_matrix_drivers.c`. Port only the IS31FL3763 registration if the Air75 actually needs it and if the current upstream driver supports it; do not restore the old custom WS2812 implementation wholesale.
 3. After those choices, run a real local three-way merge/rebase or `git merge-tree` and inspect its conflict output before any integration PR is merged. Then build all Air75 targets/keymaps.
 
+
+
+---
+
+## 14. Additional Air75 source inventory and runtime risks (2026-11-08)
+
+This section records a second pass over the actual baseline source after the initial static API audit. It adds hardware details and runtime risks that are easy to miss if the port is driven only by compiler errors.
+
+### 14.1 Keyboard definition and matrix invariants
+
+The baseline `keyboard.json` defines:
+
+- STM32F072 with `stm32-dfu` bootloader.
+- USB VID/PID `0x19F5:0x3246`, device version `1.2.0`, and `no_startup_check: true`.
+- A 6-row × 17-column matrix, COL2ROW, 2 ms debounce, with explicit row/column GPIO assignments.
+- Features: Bootmagic, Mouse Keys, Extra Keys, Console, NKRO, Key Lock and RGB Matrix enabled; QMK Command disabled.
+- Layout `LAYOUT_ansi_84`.
+- Main RGB Matrix using WS2812, 85 layout entries, centre point [80, 30], max brightness 128 and a broad set of enabled animations.
+
+Treat USB identity, matrix pins, diode direction, layout mapping and RGB LED mapping as hardware invariants. Preserve the exact matrix-to-LED mapping and flags. Build success cannot detect a physically incorrect mapping.
+
+The side lighting is a distinct 12-LED WS2812 chain on C8; it is not part of the 85-entry main RGB Matrix layout.
+
+### 14.2 Pin and peripheral map
+
+The baseline `config.h` assigns:
+
+| Signal | Pin | Function |
+|---|---|---|
+| DEV_MODE_PIN | C0 | Device/dial mode input |
+| SYS_MODE_PIN | C1 | System/OS mode input |
+| DC_BOOST_PIN | C2 | LED/power boost control |
+| NRF_RESET_PIN | B4 | External RF module reset |
+| NRF_TEST_PIN | B5 | RF module test/input |
+| NRF_WAKEUP_PIN | B8 | RF module wake/transmit control |
+| DRIVER_LED_CS_PIN | C6 | Main LED driver control |
+| DRIVER_SIDE_PIN | C8 | Side WS2812 data |
+| DRIVER_SIDE_CS_PIN | C9 | Side LED driver control |
+| UART TX | B6 | USART1 / SD1 transmit |
+| UART RX | B7 | USART1 / SD1 receive |
+
+The keyboard also enables USART1 in `mcuconf.h` and HAL serial support in `halconf.h`. Preserve those settings if the current UART driver still requires them, and verify the actual peripheral/pin mux against STM32F072 and the current QMK ChibiOS driver.
+
+### 14.3 RF protocol and UART runtime risks
+
+The external NuPhy radio is driven by a proprietary serial protocol, not QMK's built-in Bluetooth stack.
+
+- Baud rate: 460800.
+- Frame shape: `0x5A` header, command, acknowledgement/status, payload length, payload, checksum.
+- Checksum: 8-bit additive sum of payload bytes XORed with `0x5A`.
+- Three-byte acknowledgement-only frames have a separate parser path.
+- Data frames currently require exact length `RXDLen == RX_LEN + 5`, validate checksum, and perform command-specific minimum-length checks. Do not relax exact-length validation without proving the module's framing rules, checksum position, maximum payload and buffer safety.
+- UART receive is polled from `housekeeping_task_kb()`; the code waits 200 μs after the FIFO appears empty before considering a frame complete. Re-check this assumption against current UART FIFO/interrupt behaviour.
+- `rf_uart_init()` changes USART1 CR1 directly to enable parity and a 9-bit word-length setting, then configures PB6/PB7 pull-ups. Prefer expressing word length/parity through the current driver's supported serial configuration rather than mutating CR1 after `uart_init()`. Confirm the exact parity/data-bit framing expected by the RF module with a logic analyser or known-good firmware behaviour.
+- The transmit path drives NRF_WAKEUP_PIN low before UART transmit and high afterwards. Keep the wake timing and transmit completion semantics intact unless measured hardware behaviour supports a change.
+- The current generic report sender repeats each report three times. This is a potentially serious relative-mouse issue: repeated relative X/Y reports can multiply movement if the receiver does not deduplicate. Do not assume all report classes need the same retry policy. Validate keyboard, mouse, consumer and system reports independently before changing it.
+- The keyboard's `housekeeping_task_kb()` already performs UART receive, report refresh and RF status sync. Keep this periodic work at the keyboard layer and avoid duplicating it in QMK core.
+
+### 14.4 Side WS2812 timing versus RF reception
+
+The side strip has 12 LEDs × 24 bits = 288 serial data bits. The current bit-bang routine disables ChibiOS interrupts for the entire transfer using `chSysLock()/chSysUnlock()`, including the reset-low interval.
+
+At 460800 baud, a UART character takes approximately 22 μs for a 10-bit frame (and longer if the configured parity/framing uses more bits). The WS2812 critical section is therefore long enough to overlap multiple incoming UART characters. This is a credible receive overrun/data-loss risk, not a proven failure.
+
+Port requirements:
+
+1. Preserve GRB byte order and exact WS2812 high/low timing.
+2. Measure the actual interrupt-disabled interval and UART overrun behaviour on the STM32F072.
+3. Test side-light refresh while RF traffic is continuous, including keypress bursts and mouse movement.
+4. If data loss occurs, replace the bit-bang/interrupt-lock approach with a timer/DMA or other timing-safe driver, or coordinate side LED refresh with RF idle windows. Do not simply remove the lock; WS2812 timing will become unstable if interrupted.
+
+### 14.5 EEPROM payload and first-boot behaviour
+
+The Air75's eight-byte `user_config_t` stores:
+
+1. first-boot/default sentinel (`0xA5`);
+2. side mode;
+3. side brightness;
+4. side speed;
+5. side RGB setting;
+6. side colour;
+7. sleep enable;
+8. reserved byte.
+
+There is no explicit schema version in the current structure. The core NVM magic/layout change can invalidate the previous QMK EEPROM region, so first boot on the new firmware may reset more than the Air75 side-light settings. The port must explicitly document that migration/reset policy and ensure defaults are written safely.
+
+Before changing the structure, decide whether the reserved byte becomes a version field. Add a compile-time assertion that the structure size matches `EECONFIG_USER_DATA_SIZE`; ensure all datablock reads/writes use the current pointer/offset/length API and the same offset.
+
+### 14.6 Custom features and keymap compatibility
+
+The custom keycode enum includes RF DFU, USB/RF/Bluetooth link selection, macOS shortcuts, side-light mode/brightness/speed/colour, device reset, sleep, battery display, RGB test and mouse-wiggle controls.
+
+The mouse-wiggle keycode is Air75-specific; it is not a deprecated standard mouse keycode. Preserve its behaviour through the new report routing. In particular, test relative movement over USB, 2.4 GHz and all three Bluetooth profiles, and check that a report retry cannot multiply movement.
+
+The baseline tree includes `default`, `custom` and `via` keymap variants. The VIA keymap enables `VIA_ENABLE = yes`; confirm current QMK's supported VIA module/dependency arrangement and the exact keymap paths in the target branch. Do not assume the presence of a keymap implies that it builds after the keyboard port.
+
+### 14.7 Sleep/wake hardware sequence
+
+The sleep path changes the DC boost and LED-driver control pins, sends an RF sleep/config command, later powers the LEDs back up and sends an RF handshake. USB mode additionally checks remote-wakeup enable and uses ChibiOS USB wake/restart functions.
+
+The public USB wake API and asynchronous endpoint/event handling must be tested together. Avoid calling both an internal low-level wake function and the public wake function unless current QMK/ChibiOS explicitly requires both. Verify USB suspend/resume, remote wake, reconnect, RF reconnect, LED restoration and battery/status indication after wake.
+
+### 14.8 Port completion gates added by this pass
+
+- [ ] Preserve VID/PID, device version, matrix pins, COL2ROW direction, 2 ms debounce and `LAYOUT_ansi_84`.
+- [ ] Preserve the 85-entry main RGB Matrix map and the independent 12-LED side strip.
+- [ ] Confirm USART1 parity/word-length configuration against the module's required UART framing.
+- [ ] Confirm exact RF frame boundaries/checksum behaviour and safe maximum packet length.
+- [ ] Test retransmission policy per report type; specifically ensure mouse movement is not multiplied.
+- [ ] Test side WS2812 refresh during continuous UART traffic; measure overrun/drop behaviour.
+- [ ] Confirm EEPROM first-boot reset/default behaviour and config structure versioning.
+- [ ] Test custom keycodes, mouse-wiggle, all radio profiles, and USB suspend/wake on actual hardware.
+
+These are additional source-derived requirements and runtime test risks. They do not change the earlier audit boundary: no build or hardware validation has been performed as part of this documentation update.
