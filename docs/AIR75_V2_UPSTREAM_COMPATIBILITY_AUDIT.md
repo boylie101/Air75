@@ -467,9 +467,13 @@ Compatibility edits applied in this first pass:
 
 ### Verification status
 
-<badge color="warning">Not yet build-verified</badge>
+<badge color="success">Build verified for all three keymaps</badge>
 
-No local QMK build, QMK lint, GitHub Actions build or hardware test has been run. Presence of the source files and static API substitutions must not be interpreted as a successful compile. The next required step is to build `default`, `custom` and `via` keymaps against the exact branch revision, fix compiler errors, and review all warnings.
+On 2026-11-08, `default`, `custom` and `via` all compiled successfully from the working tree based on port commit `29e78ffd15c87908d9b9b3e8b3f4dac1c534545e` and QMK `f5db962110615fd263c3ebf9f0402e7c2b08fbe4`, with arm-none-eabi-gcc 15.2.0. The build identified missing ChibiOS PWM/TIM3 enablement and a duplicate `ansi.c` source entry; both were corrected in the working tree. Initial user-reported hardware testing of the custom keymap is now recorded below. No QMK lint or CI build has been run. See the migration note for commands, binary sizes, and hardware observations.
+
+### Initial hardware observations (2026-11-08)
+
+The user reports that, after flashing the custom keymap, USB typing, main and side lighting, Bluetooth, mouse wiggler, and keyboard sleep/wake all work in brief testing. Lighting/settings also appeared to persist through a power cycle. The user additionally confirmed six simultaneous keys in Mac mode and more than six in Windows mode over Bluetooth, verifying intended 6KRO/NKRO behavior in that tested configuration. RF/2.4 GHz, Bluetooth profile coverage, other report classes, longer sleep/wake cycles, and repeated persistence cycles remain unverified.
 
 The following areas remain deliberately unresolved pending build/hardware evidence:
 

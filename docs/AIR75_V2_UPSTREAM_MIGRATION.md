@@ -68,7 +68,7 @@ The migration notes and compatibility audit have since been expanded in document
 | Keyboard protocol | The old `keyboard_protocol` interface was identified as removed. | Requires search and replacement review |
 | VIA | VIA support itself was not identified as a blocker. Migration to the current community-module arrangement still needs planning and validation. | Partially assessed |
 | HID | No direct HID conflict was found in the checks performed. This is not proof that all report paths are compatible. | No issue found in reviewed scope |
-| RF / NKRO | RF packet length/report handling and NKRO interactions had not yet been fully reviewed. | Outstanding |
+| RF / NKRO | User confirmed 6KRO in Mac mode and more than six simultaneous keys in Windows mode over Bluetooth using the custom keymap. Other RF/2.4 GHz report limits remain outstanding. | Partially hardware-verified |
 | Bluetooth host driver | Upstream `host_driver_t` / Bluetooth host-driver changes were identified as an area requiring review. | Outstanding |
 
 ### Upstream breaking-change release windows reviewed
@@ -186,7 +186,7 @@ Do not mark a behaviour as tested unless it has actually been tested on hardware
 
 1. Confirm the exact NuPhy fork ancestor/revision and the current upstream base.
 2. Use the completed [Air75 V2 upstream compatibility audit](AIR75_V2_UPSTREAM_COMPATIBILITY_AUDIT.md) as the file-scoped port checklist.
-3. Start with EEPROM and GPIO API updates, then RGB keycode and UART configuration migrations; design the RF/NKRO host-capability integration before implementing report routing.
+3. Review host-driver NKRO selection against the observed Windows/Mac Bluetooth behaviour and check remaining RF report-size limits.
 4. Port incrementally on `air75-v2-qmk-port`; keep `baseline` untouched.
 5. Build, review and test in stages before any firmware flash.
 
@@ -329,11 +329,11 @@ The first source-import pass has now been committed to `air75-v2-qmk-port`. The 
 
 ### Important current limitations
 
-This is an initial source-import and compatibility pass, **not a completed or verified port**. No QMK compilation, lint, CI build or hardware test has been run from this environment. The branch must not be flashed yet.
+This is an initial source-import and compatibility pass. On 2026-11-08, the `default`, `custom`, and `via` keymaps all compiled successfully against the branch's checked-out QMK base after enabling ChibiOS PWM/TIM3 and removing a duplicate `ansi.c` source entry. This is **build-verified**, not a completed or hardware-verified port. No QMK lint, CI build or Air75 hardware test has been run. Do not flash until the remaining compatibility review and agreed hardware checks are complete.
 
 The port branch is based on QMK commit `f5db962110615fd263c3ebf9f0402e7c2b08fbe4`; current official master was observed at `d194c077ed964195ec16d255c7a4b89a794cf03b`, two upstream commits ahead. Those intervening commits are documentation changes; synchronise the branch to current upstream before finalising the port base.
 
-### Immediate next verification
+### Build verification recorded (2026-11-08)
 
 Run these builds from the QMK checkout after pulling `air75-v2-qmk-port`:
 
@@ -343,4 +343,19 @@ qmk compile -kb nuphy/air75_v2/ansi -km custom
 qmk compile -kb nuphy/air75_v2/ansi -km via
 ```
 
-Record the first complete compiler output for each keymap. Fix compiler errors in dependency order, without changing RF retry/framing semantics or hardware pin assignments merely to silence warnings. Once all three compile, inspect the generated configuration and binary sizes before proceeding to hardware validation.
+All three commands above completed successfully from the working tree based on port commit `29e78ffd15c87908d9b9b3e8b3f4dac1c534545e` (QMK base `f5db962110615fd263c3ebf9f0402e7c2b08fbe4`), using QMK CLI and arm-none-eabi-gcc 15.2.0. The build exposed and fixed two issues: PWM support and TIM3 were not enabled in the ChibiOS configuration, and `ansi.c` was included both automatically and through `rules.mk`.
+
+Build output sizes: default 57,002 bytes; custom 57,786 bytes; VIA 61,314 bytes. These are compile artifacts only; lint and CI have not been run. Initial user-reported hardware checks are recorded below. Upstream was last fetched locally at `f5db9621`; the documented `d194c077` upstream head is two documentation commits ahead, so refresh/synchronise the port before treating this as the current upstream base.
+
+### Initial Air75 V2 hardware verification (2026-11-08)
+
+The user flashed the `custom` keymap and reported brief testing on an Air75 V2:
+
+- USB typing works.
+- Main lighting and side lighting work.
+- Lighting/settings appear to persist after powering the keyboard off and back on.
+- Bluetooth works.
+- Mouse wiggler works.
+- The keyboard sleeps and wakes again.
+
+This is initial user-reported hardware verification, not a full regression pass. The tested Bluetooth profile(s), RF/2.4 GHz mode, detailed persistence coverage, and sleep/wake across each connection mode were not specified. The user subsequently confirmed six simultaneous keys in Mac mode and more than six in Windows mode over Bluetooth, verifying intended 6KRO/NKRO behavior in that tested configuration. Continue testing RF/2.4 GHz, all Bluetooth profiles, consumer/system reports, repeated mouse movement, extended idle/suspend and wake cycles, and settings persistence after repeated power cycles. VIA firmware was build-verified but was not part of this hardware test.
