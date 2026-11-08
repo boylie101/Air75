@@ -416,10 +416,11 @@ void timer_pro(void) {
         m_host_driver  = host_get_driver();
     }
 
-    if (timer_elapsed32(interval_timer) < 10)
+    if (timer_elapsed32(interval_timer) < 10) {
         return;
-    else
+    } else {
         interval_timer = timer_read32();
+    }
 
     if (rf_link_show_time < RF_LINK_SHOW_TIME) {
         rf_link_show_time++;
