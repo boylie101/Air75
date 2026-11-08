@@ -206,3 +206,90 @@ At the time of the previous audit, the implementation port was **Not started**, 
 ---
 
 *This is a living engineering note, not a substitute for commit history or test evidence. Update the branch SHAs and progress labels whenever the project state changes.*
+
+
+## Additional source-level inventory and hardware invariants (2026-11-08)
+
+The following details were checked directly against the current `baseline` source tree after the initial audit. They are recorded here so the port does not accidentally lose hardware configuration or user-facing behaviour.
+
+### Keyboard definition to preserve
+
+The baseline keyboard definition is `keyboards/nuphy/air75_v2/ansi/keyboard.json`:
+
+- Keyboard name/manufacturer: NuPhy Air75 V2 / NuPhy.
+- MCU and bootloader: STM32F072 / `stm32-dfu`.
+- USB identity: VID `0x19F5`, PID `0x3246`, device version `1.2.0`; `no_startup_check` is enabled. Preserve these unless there is a deliberate, documented reason to change them.
+- Matrix: 6 rows × 17 columns, COL2ROW, 2 ms debounce. The configured row and column GPIOs are explicit in `keyboard.json`; copy them exactly and review against the physical board before changing.
+- Enabled features: Bootmagic, Mouse Keys, Extra Keys, Console, NKRO, Key Lock and RGB Matrix. `command` is explicitly disabled.
+- Layout: `LAYOUT_ansi_84`.
+- RGB Matrix: WS2812 driver, 85 LED layout entries, centre point [80, 30], maximum brightness 128, with a large animation set. Preserve the exact LED-to-matrix map and flags; a successful build does not detect a physically incorrect LED map.
+- The side strip is a separate 12-LED WS2812 chain driven on C8; it is not the 85-entry main RGB Matrix layout.
+
+### Air75-specific GPIO and peripheral map
+
+The current `config.h` assigns:
+
+| Signal | Pin | Purpose |
+| --- | --- | --- |
+| DEV_MODE_PIN | C0 | Device/dial mode input |
+| SYS_MODE_PIN | C1 | System/OS mode input |
+| DC_BOOST_PIN | C2 | LED/power boost control |
+| NRF_RESET_PIN | B4 | External RF module reset |
+| NRF_TEST_PIN | B5 | RF module test/input |
+| NRF_WAKEUP_PIN | B8 | RF module wake/transmit control |
+| DRIVER_LED_CS_PIN | C6 | Main LED driver chip select/power control |
+| DRIVER_SIDE_PIN | C8 | Side WS2812 data |
+| DRIVER_SIDE_CS_PIN | C9 | Side LED driver chip select/power control |
+| UART TX | B6 | USART1 / SD1 transmit |
+| UART RX | B7 | USART1 / SD1 receive |
+
+Treat these as hardware invariants until a board schematic or measurement proves otherwise. The code also configures USART1 serial support in `mcuconf.h` and enables HAL serial support in `halconf.h`; these files are part of the port, not incidental leftovers.
+
+### Build and keymap inventory
+
+- Keyboard-specific build sources in `ansi/rules.mk`: `side.c`, `rf.c`, `sleep.c`, `side_driver.c`, `rf_driver.c`.
+- `UART_DRIVER_REQUIRED = yes` is currently set.
+- Keymaps present in the baseline tree: `default`, `custom` and `via`. The VIA keymap enables `VIA_ENABLE = yes`; verify the actual keymap directories/files in the target branch rather than assuming all three are buildable after the port.
+- The keyboard header defines custom RF/link selection, macOS shortcuts, side-light controls, device reset, sleep, battery display, RGB test and mouse-wiggle keycodes. Preserve the custom keycode namespace and check it for collisions with current QMK quantum/keycode ranges.
+- `MS_WIGL` is a keyboard-specific custom keycode, not one of the removed standard `KC_MS_*` aliases. Its implementation depends on the mouse report path and must be tested over each output transport.
+
+### RF transport invariants and review risks
+
+The baseline RF protocol is a proprietary external-module protocol. It is not QMK's built-in Bluetooth implementation.
+
+- UART baud rate is 460800. `rf_uart_init()` currently enables parity and changes USART1 word-length bits directly through `USART1->CR1`, then configures pull-ups on PB6/PB7. This is a hardware-sensitive area: move word length/parity into the current UART driver's supported configuration where possible, and verify the actual framing (the legacy CR1 setup is intended to provide the module's required data/parity format).
+- Frames use header `0x5A`, command, acknowledgement/status, payload length, payload and checksum. The checksum is an 8-bit additive payload checksum XORed with `0x5A`. Three-byte acknowledgement-only frames are handled separately. Preserve this wire format unless the module protocol is independently documented and tested.
+- Receive parsing currently requires exact data-frame length `RXDLen == RX_LEN + 5`, checks the payload checksum, and applies command-specific minimum payload checks. A community implementation reportedly tolerates trailing bytes; do not relax this check without confirming packet boundaries, buffer bounds, checksum location and real module behaviour.
+- RX data is polled from QMK's UART FIFO in `housekeeping_task_kb()`; the receiver treats an idle interval as end-of-frame and waits 200 microseconds after the FIFO becomes empty. Review this against current UART buffering and interrupt behaviour.
+- `UART_Send_Bytes()` drives the RF wake pin low before transmit and high after a calculated delay. The generic report sender currently sets `uart_repeat_flag`, which sends every report three times. This may be intentional for some report classes but can multiply relative mouse movement if the receiver does not deduplicate. Split retransmission policy by report type only after testing the module's semantics.
+- `housekeeping_task_kb()` already calls `uart_receive_pro()`, `uart_send_report_func()` and `dev_sts_sync()`. Keep periodic RF work at the keyboard layer; do not reintroduce duplicate core-level forwarding.
+- The selected `rf_host_driver` is swapped with the USB host driver according to link mode. Keep this routing model in the keyboard implementation and explicitly solve the current upstream NKRO-capability gap; do not patch upstream `host.c` with Air75-specific report calls.
+
+### Lighting and interrupt timing
+
+- Main RGB Matrix and the 12 side LEDs are separate paths with separate configuration/state. Side-light modes, speed, brightness, colour and sleep enable are persisted in the eight-byte `user_config_t`.
+- The side LED bit-bang driver sends GRB byte order and wraps the full 12-LED transfer in `chSysLock()/chSysUnlock()`. A frame is roughly 288 data bits; at WS2812 timing this creates a few-hundred-microsecond interrupt-disabled interval. At 460800 baud, UART characters arrive on a timescale of tens of microseconds. This is a credible UART receive-latency/data-loss risk that must be measured on hardware; consider DMA/timer-driven output or another interrupt-safe implementation if drops are observed.
+- The side driver uses explicit WS2812 timing constants and a reset-low interval. Preserve GRB ordering and validate pulse timing on the actual STM32F072 clock. Do not assume the old `WS2812_PWM_TARGET_PERIOD` still controls the current QMK RGB Matrix PWM driver.
+- Sleep/wake controls DC boost and both LED driver control pins, sends RF sleep/handshake commands, and has a USB remote-wakeup path. Test transitions in USB, 2.4 GHz and Bluetooth modes; LED state and RF state must recover together.
+
+### Persistent configuration policy
+
+The eight-byte `user_config_t` currently contains a first-boot sentinel, five side-light settings, sleep enable and one reserved byte. There is no explicit schema/version field today. The first-boot sentinel is `0xA5`.
+
+Because the upstream NVM magic/layout change can reset the core EEPROM region, do not promise seamless preservation of old firmware settings. Define and document the first-boot behaviour. Before changing the struct, decide whether to consume the reserved byte for a schema version, and ensure the configured allocation size and compile-time size assertion agree. Never read an old struct layout as though it were the new layout without a version/compatibility check.
+
+### Current upstream base freshness
+
+At the time of this update, official QMK master is `d194c077ed964195ec16d255c7a4b89a794cf03b` (2026-11-08). The repository's recorded `qmk-master` and initial port base are `f5db962110615fd263c3ebf9f0402e7c2b08fbe4` (2026-10-29). The intervening two upstream commits are documentation/keyboard-readme changes, but fast-forward `qmk-master` and `air75-v2-qmk-port` to the current upstream head before beginning code changes so the documented base is exact.
+
+### Newly recorded port sequence
+
+1. Fast-forward the clean base to current official QMK master.
+2. Copy the keyboard definition and Air75 keyboard-specific source/configuration/keymaps only; retain upstream core files.
+3. Get metadata, matrix, build rules and a minimal keymap compiling before touching RF behaviour.
+4. Migrate GPIO, EEPROM, keycodes and UART configuration as separate, reviewable changes.
+5. Resolve host-driver/NKRO capability deliberately before restoring RF report routing.
+6. Validate side LED timing against UART reception, then validate RF packet/report semantics.
+7. Build all intended keymaps and record USB, RF, Bluetooth, lighting, sleep/wake and persistence hardware results.
+
+No firmware source was changed by this documentation update.
