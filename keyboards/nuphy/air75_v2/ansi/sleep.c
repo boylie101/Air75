@@ -80,7 +80,7 @@ void sleep_handle(void) {
         if (dev_info.link_mode == LINK_USB) {
             #define USB_GETSTATUS_REMOTE_WAKEUP_ENABLED (2U)
             if ((USB_DRIVER.status & USB_GETSTATUS_REMOTE_WAKEUP_ENABLED) ) {
-                usb_lld_wakeup_host(&USB_DRIVER);
+                usbWakeupHost(&USB_DRIVER);
                 wait_ms(50);
                 uint8_t timeout = 10;
                 while ((USB_DRIVER.state == USB_SUSPENDED) && (timeout--)) {
