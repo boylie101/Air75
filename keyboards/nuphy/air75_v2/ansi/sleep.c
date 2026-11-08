@@ -47,10 +47,11 @@ void sleep_handle(void) {
         f_goto_sleep = 0;
 
         if(user_config.sleep_enable) {
-            if (dev_info.rf_state == RF_CONNECT)
+            if (dev_info.rf_state == RF_CONNECT) {
                 uart_send_cmd(CMD_SET_CONFIG, 5, 5);
-            else
+            } else {
                 uart_send_cmd(CMD_SLEEP, 5, 5);
+            }
 
             // power off led
             setPinOutput(DC_BOOST_PIN);
@@ -94,8 +95,9 @@ void sleep_handle(void) {
     }
 
     // sleep check
-    if (f_goto_sleep || f_wakeup_prepare)
+    if (f_goto_sleep || f_wakeup_prepare) {
         return;
+    }
     if (dev_info.link_mode == LINK_USB) {
         if (USB_DRIVER.state == USB_SUSPENDED) {
             usb_suspend_debounce++;
