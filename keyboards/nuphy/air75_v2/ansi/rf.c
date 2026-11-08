@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "ansi.h"
+#include <hal.h>
 #include "uart.h"  // qmk uart.h
 #include "rf_driver.h"
 
