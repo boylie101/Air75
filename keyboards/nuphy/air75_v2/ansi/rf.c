@@ -140,8 +140,9 @@ void uart_send_report_func(void)
             uart_send_report(CMD_RPT_BYTE_KB, bytekb_report_buf, 8);
             wait_us(200);
 
-            if(f_bit_kb_act)
-            uart_send_report(CMD_RPT_BIT_KB, uart_bit_report_buf, 16);
+            if (f_bit_kb_act) {
+                uart_send_report(CMD_RPT_BIT_KB, uart_bit_report_buf, 16);
+            }
         }
         else {
             f_bit_kb_act = 0;
@@ -508,10 +509,11 @@ void dev_sts_sync(void) {
     static uint32_t interval_timer  = 0;
     static uint8_t  link_state_temp = RF_DISCONNECT;
 
-    if (timer_elapsed32(interval_timer) < 200)
+    if (timer_elapsed32(interval_timer) < 200) {
         return;
-    else
+    } else {
         interval_timer = timer_read32();
+    }
 
     if (f_rf_reset) {
         f_rf_reset = 0;
@@ -615,8 +617,9 @@ uint8_t get_checksum(uint8_t *buf, uint8_t len) {
     uint8_t i;
     uint8_t checksum = 0;
 
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; i++) {
         checksum += *buf++;
+    }
 
     checksum ^= UART_HEAD;
 
