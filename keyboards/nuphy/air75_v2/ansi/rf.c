@@ -143,8 +143,7 @@ void uart_send_report_func(void)
             if (f_bit_kb_act) {
                 uart_send_report(CMD_RPT_BIT_KB, uart_bit_report_buf, 16);
             }
-        }
-        else {
+        } else {
             f_bit_kb_act = 0;
         }
     }
@@ -535,8 +534,7 @@ void dev_sts_sync(void) {
             break_all_key();
         }
         rf_blink_cnt = 0;
-    }
-    else {
+    } else {
         if (host_mode != HOST_RF_TYPE) {
             host_mode = HOST_RF_TYPE;
             break_all_key();
@@ -584,9 +582,8 @@ void dev_sts_sync(void) {
  * @param Length data length
  */
 void UART_Send_Bytes(uint8_t *Buffer, uint32_t Length) {
-    if(uart_repeat_flag) {
-        for(uint8_t i = 0;i<3;i++)
-        {
+    if (uart_repeat_flag) {
+        for (uint8_t i = 0; i < 3; i++) {
             writePinLow(NRF_WAKEUP_PIN);
             wait_us(50);
         
