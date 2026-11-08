@@ -559,7 +559,7 @@ void dev_sts_sync(void) {
                 link_state_temp   = RF_CONNECT;
                 rf_link_show_time = 0;
                 if (dev_info.link_mode == LINK_RF_24) {
-                    uart_send_cmd(CMD_SET_24G_NAME, 10, 30);   
+                    uart_send_cmd(CMD_SET_24G_NAME, 10, 30);
                 }
 
             }
