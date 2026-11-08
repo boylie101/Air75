@@ -259,3 +259,33 @@ The normal Air75 keymaps inspected use ordinary keycodes that appear to fit this
 ## Audit boundary
 
 This is a completed **static source/API and release-history audit**. It identifies definite source blockers and unresolved design/test items. It is not a successful build report, and no item should be labelled build-verified or hardware-verified until those checks have actually been run on an Air75 V2.
+
+
+---
+
+## 11. Branch merge and integration audit
+
+Compared `baseline` and `qmk-master` against common ancestor `260e9a546ebf` (2024-06-06).
+
+- `baseline`: 47 commits ahead of the common ancestor.
+- `qmk-master`: 2,213 commits ahead of the common ancestor.
+- `air75-v2-qmk-port`: based on `qmk-master`, with migration/audit documentation commits.
+
+A recursive tree comparison found two files changed on both sides:
+
+1. **`tmk_core/protocol/host.c` — high risk.** NuPhy added RF/UART forwarding into core host-send functions. Upstream independently changed those same paths for active host-driver selection, Bluetooth routing, NKRO capability and extra reports. The NuPhy hooks should not be carried forward: they duplicate keyboard-level RF forwarding and include report calls whose declarations do not match the actual pointer-taking functions. Keep upstream `host.c` and integrate RF through the Air75 keyboard host driver.
+2. **`quantum/rgb_matrix/rgb_matrix_drivers.c` — overlapping file, apparently separate hunks.** NuPhy added IS31FL3763 registration; upstream refactored WS2812 handling. This looks less likely to produce a textual conflict, but the IS31FL3763 registration/API must be checked against current RGB Matrix architecture. Do not copy this core file wholesale.
+
+The Air75 V2 keyboard subtree is fork-side content not independently changed by upstream in this ancestry comparison. That lowers same-path merge risk for those files, but does not remove the API compatibility work identified elsewhere in this audit.
+
+### Integration recommendation
+
+- Do not merge `baseline` wholesale into `qmk-master`.
+- Keep official QMK as the port base and port the Air75 keyboard subtree deliberately.
+- Retain upstream `tmk_core/protocol/host.c`.
+- Investigate whether the IS31FL3763 registration is required, and port only the necessary driver integration.
+- Resolve compile errors, then validate hardware behaviour.
+
+### Verification boundary
+
+This is a branch-ancestry and three-way changed-path/source-overlap audit. **No actual Git merge, rebase, merge-tree test, or temporary merge PR was executed.** Therefore it identifies likely conflict areas and integration hazards, but does not claim a definitive Git mergeability result. No production branch was merged or rewritten.
