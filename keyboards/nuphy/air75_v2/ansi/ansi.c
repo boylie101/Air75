@@ -79,9 +79,10 @@ void    side_colour_control(uint8_t dir);
 void    side_mode_control(uint8_t dir);
 void    side_led_show(void);
 void    sleep_handle(void);
-void    bat_led_close(void);
 void    num_led_show(void);
 void    rgb_test_show(void);
+void    device_reset_show(void);
+void    device_reset_init(void);
 
 /**
  * @brief  gpio initial.
@@ -163,9 +164,6 @@ void long_press_key(void) {
             uart_send_cmd(CMD_SET_LINK, 10, 10);
             wait_ms(500);
             uart_send_cmd(CMD_CLR_DEVICE, 10, 10);
-
-            void device_reset_show(void);
-            void device_reset_init(void);
 
             eeconfig_init();
             device_reset_show();
@@ -333,7 +331,6 @@ void dial_sw_scan(void) {
  * @brief  power on scan dial switch.
  */
 void dial_sw_fast_scan(void) {
-{
     uint8_t dial_scan_dev = 0;
     uint8_t dial_scan_sys = 0;
     uint8_t dial_check_dev = 0;
@@ -389,7 +386,6 @@ void dial_sw_fast_scan(void) {
         }
     }
 }
-}
 
 /**
  * @brief  timer process.
@@ -419,7 +415,7 @@ void timer_pro(void) {
 /**
  * @brief  londing eeprom data.
  */
-void londing_eeprom_data(void) {
+void loading_eeprom_data(void) {
     eeconfig_read_user_datablock(&user_config);
     if (user_config.default_brightness_flag != 0xA5) {
         /* first power on, set rgb matrix brightness at middle level*/
@@ -721,7 +717,7 @@ void keyboard_post_init_kb(void) {
 
     break_all_key();
     dial_sw_fast_scan();
-    londing_eeprom_data();
+    loading_eeprom_data();
     keyboard_post_init_user();
 }
 

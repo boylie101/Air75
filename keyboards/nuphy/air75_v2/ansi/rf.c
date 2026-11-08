@@ -24,7 +24,6 @@ USART_MGR_STRUCT Usart_Mgr;
 #define RX_CMD      Usart_Mgr.RXDBuf[1]
 #define RX_ACK      Usart_Mgr.RXDBuf[2]
 #define RX_LEN      Usart_Mgr.RXDBuf[3]
-#define RX_DAT      Usart_Mgr.RXDBuf[4]
 
 extern bool f_uart_ack;
 extern bool f_rf_read_data_ok;
@@ -38,8 +37,6 @@ uint8_t  uart_bit_report_buf[32] = {0};
 uint8_t  func_tab[32]            = {0};
 uint8_t  bitkb_report_buf[32]    = {0};
 uint8_t  bytekb_report_buf[8]    = {0};
-uint16_t conkb_report            = 0;
-uint16_t syskb_report            = 0;
 uint8_t  sync_lost               = 0;
 uint8_t  disconnect_delay        = 0;
 bool     uart_repeat_flag        = 0;
@@ -61,7 +58,6 @@ void           UART_Send_Bytes(uint8_t *Buffer, uint32_t Length);
 uint8_t        get_checksum(uint8_t *buf, uint8_t len);
 void           uart_receive_pro(void);
 void           break_all_key(void);
-uint16_t       host_last_consumer_usage(void);
 
 /**
  * @brief Uart auto nkey send
