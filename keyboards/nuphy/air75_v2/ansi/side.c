@@ -131,12 +131,18 @@ void side_light_control(uint8_t dir) {
  * @note  save to eeprom.
  */
 void side_speed_control(uint8_t dir) {
-    if ((side_speed) > SIDE_SPEED_MAX) (side_speed) = SIDE_SPEED_MAX / 2;
+    if ((side_speed) > SIDE_SPEED_MAX) {
+        (side_speed) = SIDE_SPEED_MAX / 2;
+    }
 
     if (dir) {
-        if ((side_speed)) side_speed--;
+        if ((side_speed)) {
+            side_speed--;
+        }
     } else {
-        if ((side_speed) < SIDE_SPEED_MAX) side_speed++;
+        if ((side_speed) < SIDE_SPEED_MAX) {
+            side_speed++;
+        }
     }
     user_config.ee_side_speed = side_speed;
     eeconfig_update_user_datablock(&user_config);
@@ -318,10 +324,14 @@ void sys_led_show(void) {
 static void light_point_playing(uint8_t trend, uint8_t step, uint8_t len, uint8_t *point) {
     if (trend) {
         *point += step;
-        if (*point >= len) *point -= len;
+        if (*point >= len) {
+            *point -= len;
+        }
     } else {
         *point -= step;
-        if (*point >= len) *point = len - (255 - *point) - 1;
+        if (*point >= len) {
+            *point = len - (255 - *point) - 1;
+        }
     }
 }
 
@@ -352,7 +362,9 @@ static void side_wave_mode_show(void) {
         return;
     else
         side_play_cnt -= side_speed_table[side_mode][side_speed];
-    if (side_play_cnt > 20) side_play_cnt = 0;
+    if (side_play_cnt > 20) {
+        side_play_cnt = 0;
+    }
 
     if (side_rgb)
         light_point_playing(0, 3, FLOW_COLOUR_TAB_LEN, &side_play_point);
@@ -392,7 +404,9 @@ static void side_spectrum_mode_show(void) {
         return;
     else
         side_play_cnt -= side_speed_table[side_mode][side_speed];
-    if (side_play_cnt > 20) side_play_cnt = 0;
+    if (side_play_cnt > 20) {
+        side_play_cnt = 0;
+    }
 
     light_point_playing(1, 1, FLOW_COLOUR_TAB_LEN, &side_play_point);
 
@@ -419,7 +433,9 @@ static void side_breathe_mode_show(void) {
         return;
     else
         side_play_cnt -= side_speed_table[side_mode][side_speed];
-    if (side_play_cnt > 20) side_play_cnt = 0;
+    if (side_play_cnt > 20) {
+        side_play_cnt = 0;
+    }
 
     light_point_playing(0, 1, BREATHE_TAB_LEN, &play_point);
 
@@ -446,9 +462,13 @@ static void side_static_mode_show(void) {
         return;
     else
         side_play_cnt -= side_speed_table[side_mode][side_speed];
-    if (side_play_cnt > 20) side_play_cnt = 0;
+    if (side_play_cnt > 20) {
+        side_play_cnt = 0;
+    }
 
-    if (side_play_point >= SIDE_COLOUR_MAX) side_play_point = 0;
+    if (side_play_point >= SIDE_COLOUR_MAX) {
+        side_play_point = 0;
+    }
 
     for (int i = 0; i < SIDE_LINE; i++) {
         r_temp = colour_lib[side_colour][0];
@@ -471,7 +491,9 @@ static void side_off_mode_show(void) {
         return;
     else
         side_play_cnt -= side_speed_table[side_mode][side_speed];
-    if (side_play_cnt > 20) side_play_cnt = 0;
+    if (side_play_cnt > 20) {
+        side_play_cnt = 0;
+    }
 
     r_temp = 0x00;
     g_temp = 0x00;
@@ -553,16 +575,36 @@ void bat_num_led(uint8_t bat_percent)
     }
 
     // set percent
-    if (bat_percent >= 1) rgb_matrix_set_color(29, r, g, b);
-    if (bat_percent > 10) rgb_matrix_set_color(28, r, g, b);
-    if (bat_percent > 20) rgb_matrix_set_color(27, r, g, b);
-    if (bat_percent > 30) rgb_matrix_set_color(26, r, g, b);
-    if (bat_percent > 40) rgb_matrix_set_color(25, r, g, b);
-    if (bat_percent > 50) rgb_matrix_set_color(24, r, g, b);
-    if (bat_percent > 60) rgb_matrix_set_color(23, r, g, b);
-    if (bat_percent > 70) rgb_matrix_set_color(22, r, g, b);
-    if (bat_percent > 80) rgb_matrix_set_color(21, r, g, b);
-    if (bat_percent > 90) rgb_matrix_set_color(20, r, g, b);
+    if (bat_percent >= 1) {
+        rgb_matrix_set_color(29, r, g, b);
+    }
+    if (bat_percent > 10) {
+        rgb_matrix_set_color(28, r, g, b);
+    }
+    if (bat_percent > 20) {
+        rgb_matrix_set_color(27, r, g, b);
+    }
+    if (bat_percent > 30) {
+        rgb_matrix_set_color(26, r, g, b);
+    }
+    if (bat_percent > 40) {
+        rgb_matrix_set_color(25, r, g, b);
+    }
+    if (bat_percent > 50) {
+        rgb_matrix_set_color(24, r, g, b);
+    }
+    if (bat_percent > 60) {
+        rgb_matrix_set_color(23, r, g, b);
+    }
+    if (bat_percent > 70) {
+        rgb_matrix_set_color(22, r, g, b);
+    }
+    if (bat_percent > 80) {
+        rgb_matrix_set_color(21, r, g, b);
+    }
+    if (bat_percent > 90) {
+        rgb_matrix_set_color(20, r, g, b);
+    }
 }
 
 void num_led_show(void)
