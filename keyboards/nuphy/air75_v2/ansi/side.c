@@ -309,9 +309,7 @@ void sys_led_show(void) {
         if (host_keyboard_led_state().caps_lock) {
             set_left_rgb(0X00, 0x80, 0x80);
         }
-    }
-
-    else {
+    } else {
         if (dev_info.rf_led & 0x02) {
             set_left_rgb(0X00, 0x80, 0x80);
         }
@@ -574,14 +572,11 @@ void bat_num_led(uint8_t bat_percent)
     // set color
     if (bat_percent <= 15) {
         r = 0xff; g = 0x00; b = 0x00;
-    }
-    else if (bat_percent <= 50) {
+    } else if (bat_percent <= 50) {
         r = 0xff; g = 0x40; b = 0x00;
-    }
-    else if (bat_percent <= 80) {
+    } else if (bat_percent <= 80) {
         r = 0xff; g = 0xff; b = 0x00;
-    }
-    else {
+    } else {
         r = 0x00; g = 0xff; b = 0x00;
     }
 
