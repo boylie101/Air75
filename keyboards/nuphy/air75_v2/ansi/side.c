@@ -113,13 +113,15 @@ void side_light_control(uint8_t dir) {
     if (dir) {
         if (side_light > SIDE_BRIGHT_MAX) {
             return;
-        } else
+        } else {
             side_light++;
+        }
     } else {
         if (side_light == 0) {
             return;
-        } else
+        } else {
             side_light--;
+        }
     }
     user_config.ee_side_light = side_light;
     eeconfig_update_user_datablock(&user_config);
