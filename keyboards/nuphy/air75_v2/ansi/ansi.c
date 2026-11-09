@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "usb_main.h"
 #include "rf_driver.h"
 
+void nuphy_rgb_note_keypress(uint8_t row, uint8_t col);
+
 user_config_t user_config;
 DEV_INFO_STRUCT dev_info = {
     .rf_baterry = 100,
@@ -441,14 +443,15 @@ void timer_pro(void) {
  */
 void loading_eeprom_data(void) {
     eeconfig_read_user_datablock(&user_config, 0, sizeof(user_config));
-    if (user_config.default_brightness_flag != 0xA6) {
-        /* Updated lighting defaults: static sage green for key and side LEDs. */
+    if (user_config.default_brightness_flag != 0xAD) {
+        /* Updated lighting defaults: static sage green for key and stronger green side LEDs. */
         rgb_matrix_enable();
         rgb_matrix_mode(RGB_MATRIX_SOLID_COLOR);
-        rgb_matrix_sethsv(59, 38, 154);
+        rgb_matrix_sethsv(68, 118, 149);
         side_mode = 2;
-        side_colour = 8;
-        user_config.default_brightness_flag = 0xA6;
+        side_light = 4;
+        side_colour = 0;
+        user_config.default_brightness_flag = 0xAD;
         user_config.ee_side_mode            = side_mode;
         user_config.ee_side_light           = side_light;
         user_config.ee_side_speed           = side_speed;
@@ -469,6 +472,9 @@ void loading_eeprom_data(void) {
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (!process_record_user(keycode, record)) {
         return false;
+    }
+    if (record->event.pressed) {
+        nuphy_rgb_note_keypress(record->event.key.row, record->event.key.col);
     }
     no_act_time = 0;
     switch (keycode) {
@@ -665,6 +671,25 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 side_colour_control(1);
             }
             return false;
+
+        case RGB_COL_NEXT: {
+            static uint8_t colour_index = 0xff;
+            static const uint8_t hues[] = {68, 15, 128, 0};
+            static const uint8_t sats[] = {118, 255, 255, 0};
+            static const uint8_t vals[] = {149, 255, 255, 255};
+            if (record->event.pressed) {
+                if (colour_index == 0xff) {
+                    uint8_t hue = rgb_matrix_get_hue();
+                    uint8_t sat = rgb_matrix_get_sat();
+                    colour_index = (sat < 10) ? 3 : (hue < 5 || hue > 250) ? 3 :
+                                   (hue < 35) ? 1 : (hue > 100 && hue < 160) ? 2 : 0;
+                }
+                colour_index = (colour_index + 1) % 4;
+                rgb_matrix_mode(RGB_MATRIX_SOLID_COLOR);
+                rgb_matrix_sethsv(hues[colour_index], sats[colour_index], vals[colour_index]);
+            }
+            return false;
+        }
 
         case SIDE_SPI:
             if (record->event.pressed) {

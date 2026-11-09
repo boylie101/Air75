@@ -47,6 +47,7 @@ enum custom_keycodes {
     MAC_DND,
     BAT_NUM,
     RGB_TEST,
+    RGB_COL_NEXT,
     MS_WIGL
 };
 

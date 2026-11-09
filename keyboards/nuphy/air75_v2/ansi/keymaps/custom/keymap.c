@@ -34,9 +34,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 	_______,	KC_F1,	KC_F2,	KC_F3,	KC_F4,	KC_F5,	KC_F6,	KC_F7,	KC_F8,	KC_F9,	KC_F10,	KC_F11,	KC_F12,	S(KC_PSCR),	_______,	_______,
 	_______, 	LNK_BLE1,  	LNK_BLE2,  	LNK_BLE3,  	LNK_RF,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	_______, 				_______,	_______,
 	_______, 	_______,   	_______,   	_______,  	DEV_RESET,   	RGB_TEST,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,		_______, 			KC_NUBS,	_______,
-	_______,	MO(4),   	SLEEP_MODE,   	_______,  	_______,   	_______,   	_______,	_______,   	_______,   	_______,  	_______,	_______, 	 						_______,	_______,
-	_______,				_______,   	_______,   	_______,  	_______,	BAT_SHOW,	BAT_NUM,	MS_WIGL, 		RM_SPDD,	RM_SPDU,	_______,				_______,	RM_VALU,	_______,
-	_______,	_______,	_______,										_______, 							_______,	MO(1),   	_______,				RM_NEXT,	RM_VALD,    RM_HUEU),
+	_______,	_______,	SLEEP_MODE,	_______,	_______,	_______,	_______,	_______,	_______,	MO(4),	_______,	_______,	_______,	_______,
+	_______,	_______,	_______,	_______,	_______,	BAT_SHOW,	BAT_NUM,	MS_WIGL,	RM_SPDD,	RM_SPDU,	_______,	_______,	RM_VALU,	_______,
+	_______,	_______,	_______,										_______, 							_______,	MO(1),   	_______,				RM_NEXT,	RM_VALD,    RGB_COL_NEXT),
 
 // layer Windows
 [2] = LAYOUT_ansi_84(
@@ -52,9 +52,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 	_______,	KC_F1,	KC_F2,	LGUI(KC_D),	LGUI(KC_E),	LGUI(LALT(KC_K)),	LGUI(KC_N),	KC_F7,	KC_F8,	KC_F9,	KC_F10,	KC_F11,	KC_F12,	KC_PSCR,	_______,	_______,
 	_______, 	LNK_BLE1,  	LNK_BLE2,  	LNK_BLE3,  	LNK_RF,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	_______, 				_______,	_______,
 	_______, 	_______,   	_______,   	_______,  	DEV_RESET,   	RGB_TEST,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,		_______, 			KC_NUBS,	_______,
-	_______,	MO(4),   	SLEEP_MODE,   	_______,  	_______,   	_______,   	_______,	_______,   	_______,   	_______,  	_______,	_______, 	 						_______,	_______,
-	_______,				_______,   	_______,   	_______,  	_______,	BAT_SHOW,	BAT_NUM,	MS_WIGL, 		RM_SPDD,	RM_SPDU,	_______,				_______,	RM_VALU,	_______,
-	_______,	_______,	_______,										_______, 							_______,	MO(3),   	_______,				RM_NEXT,	RM_VALD,    RM_HUEU),
+	_______,	_______,	SLEEP_MODE,	_______,	_______,	_______,	_______,	_______,	_______,	MO(4),	_______,	_______,	_______,	_______,
+	_______,	_______,	_______,	_______,	_______,	BAT_SHOW,	BAT_NUM,	MS_WIGL,	RM_SPDD,	RM_SPDU,	_______,	_______,	RM_VALU,	_______,
+	_______,	_______,	_______,										_______, 							_______,	MO(3),   	_______,				RM_NEXT,	RM_VALD,    RGB_COL_NEXT),
 
 // layer 4
 [4] = LAYOUT_ansi_84(
@@ -151,7 +151,7 @@ bool rgb_matrix_indicators_user(void) {
         set_key_led(0, col, white_r, white_g, white_b);
     }
     set_key_led(2, 14, white_r, white_g, white_b); // Mac print
-    set_key_led(3, 1, purple_r, purple_g, purple_b);  // Fn + A: extra layer
+    set_key_led(3, 9, purple_r, purple_g, purple_b);  // Fn + L: side-light controls
     set_key_led(3, 2, red_r, red_g, red_b); // Fn + S: sleep toggle
     set_key_led(2, 4, red_r, red_g, red_b);           // Fn + R: reset (hold 3 seconds)
     set_key_led(2, 5, white_r, white_g, white_b);  // Fn + T: RGB test mode

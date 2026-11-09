@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define SIDE_BRIGHT_MAX     4
 #define SIDE_SPEED_MAX      4
-#define SIDE_COLOUR_MAX     9
+#define SIDE_COLOUR_MAX     4
 
 #define SIDE_LINE           6
 #define SIDE_LED_NUM        12
@@ -156,34 +156,11 @@ void side_speed_control(uint8_t dir) {
  * @note  save to eeprom.
  */
 void side_colour_control(uint8_t dir) {
-    if (side_mode != SIDE_WAVE) {
-        if (side_rgb) {
-            side_rgb    = 0;
-            side_colour = 0;
-        }
-    }
+    side_rgb = 0;
     if (dir) {
-        if (side_rgb) {
-            side_rgb    = 0;
-            side_colour = 0;
-        } else {
-            side_colour++;
-            if (side_colour >= SIDE_COLOUR_MAX) {
-                side_rgb    = 1;
-                side_colour = 0;
-            }
-        }
+        side_colour = (side_colour + 1) % SIDE_COLOUR_MAX;
     } else {
-        if (side_rgb) {
-            side_rgb    = 0;
-            side_colour = SIDE_COLOUR_MAX - 1;
-        } else {
-            side_colour--;
-            if (side_colour >= SIDE_COLOUR_MAX) {
-                side_rgb    = 1;
-                side_colour = 0;
-            }
-        }
+        side_colour = (side_colour == 0) ? SIDE_COLOUR_MAX - 1 : side_colour - 1;
     }
     user_config.ee_side_rgb    = side_rgb;
     user_config.ee_side_colour = side_colour;
@@ -485,7 +462,7 @@ static void side_static_mode_show(void) {
         count_rgb_light(side_light_table[side_light]);
 
         for (int j = 0; j < 2; j++) {
-            side_rgb_set_color(side_led_index_tab[i][j], r_temp >> 2, g_temp >> 2, b_temp >> 2);
+            side_rgb_set_color(side_led_index_tab[i][j], r_temp, g_temp, b_temp);
         }
     }
 }
@@ -766,10 +743,10 @@ void device_reset_show(void) {
  */
 void device_reset_init(void) {
     side_mode       = 2;
-    side_light      = 3;
+    side_light      = 4;
     side_speed      = 2;
     side_rgb        = 1;
-    side_colour     = 8;
+    side_colour     = 0;
     side_play_point = 0;
 
     side_play_cnt   = 0;
@@ -780,9 +757,9 @@ void device_reset_init(void) {
     rgb_matrix_enable();
     rgb_matrix_mode(RGB_MATRIX_SOLID_COLOR);
     rgb_matrix_set_speed(255 - RGB_MATRIX_SPD_STEP * 2);
-    rgb_matrix_sethsv(59, 38, 154);
+    rgb_matrix_sethsv(68, 118, 149);
 
-    user_config.default_brightness_flag = 0xA6;
+    user_config.default_brightness_flag = 0xAD;
     user_config.ee_side_mode            = side_mode;
     user_config.ee_side_light           = side_light;
     user_config.ee_side_speed           = side_speed;
