@@ -76,7 +76,7 @@ const uint8_t side_led_index_tab[SIDE_LINE][2] = {
 };
 
 extern DEV_INFO_STRUCT dev_info;
-extern user_config_t   user_config;
+extern keyboard_config_t keyboard_config;
 extern uint8_t         rf_blink_cnt;
 extern uint16_t        rf_link_show_time;
 extern bool            f_bat_hold;
@@ -125,8 +125,8 @@ void side_light_control(uint8_t dir) {
             side_light--;
         }
     }
-    user_config.ee_side_light = side_light;
-    eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config));
+    keyboard_config.ee_side_light = side_light;
+    eeconfig_update_kb_datablock(&keyboard_config, 0, sizeof(keyboard_config));
 }
 
 /**
@@ -148,8 +148,8 @@ void side_speed_control(uint8_t dir) {
             side_speed++;
         }
     }
-    user_config.ee_side_speed = side_speed;
-    eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config));
+    keyboard_config.ee_side_speed = side_speed;
+    eeconfig_update_kb_datablock(&keyboard_config, 0, sizeof(keyboard_config));
 }
 
 /**
@@ -164,9 +164,9 @@ void side_colour_control(uint8_t dir) {
     } else {
         side_colour = (side_colour == 0) ? SIDE_COLOUR_MAX - 1 : side_colour - 1;
     }
-    user_config.ee_side_rgb    = side_rgb;
-    user_config.ee_side_colour = side_colour;
-    eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config));
+    keyboard_config.ee_side_rgb    = side_rgb;
+    keyboard_config.ee_side_colour = side_colour;
+    eeconfig_update_kb_datablock(&keyboard_config, 0, sizeof(keyboard_config));
 }
 
 /**
@@ -188,8 +188,8 @@ void side_mode_control(uint8_t dir) {
         }
     }
     side_play_point          = 0;
-    user_config.ee_side_mode = side_mode;
-    eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config));
+    keyboard_config.ee_side_mode = side_mode;
+    eeconfig_update_kb_datablock(&keyboard_config, 0, sizeof(keyboard_config));
 }
 
 /**
@@ -258,7 +258,7 @@ void sleep_sw_led_show(void) {
     }
 
     if (sleep_show_flag) {
-        if (user_config.sleep_enable) {
+        if (keyboard_config.sleep_enable) {
             r_temp = 0x00;
             g_temp = 0x80;
             b_temp = 0x00;
@@ -759,14 +759,14 @@ void device_reset_init(void) {
     rgb_matrix_set_speed(255 - RGB_MATRIX_SPD_STEP * 2);
     rgb_matrix_sethsv(68, 118, 149);
 
-    user_config.default_brightness_flag = 0xAD;
-    user_config.ee_side_mode            = side_mode;
-    user_config.ee_side_light           = side_light;
-    user_config.ee_side_speed           = side_speed;
-    user_config.ee_side_rgb             = side_rgb;
-    user_config.ee_side_colour          = side_colour;
-    user_config.sleep_enable            = true;
-    eeconfig_update_user_datablock(&user_config, 0, sizeof(user_config));
+    keyboard_config.default_brightness_flag = 0xAD;
+    keyboard_config.ee_side_mode            = side_mode;
+    keyboard_config.ee_side_light           = side_light;
+    keyboard_config.ee_side_speed           = side_speed;
+    keyboard_config.ee_side_rgb             = side_rgb;
+    keyboard_config.ee_side_colour          = side_colour;
+    keyboard_config.sleep_enable            = true;
+    eeconfig_update_kb_datablock(&keyboard_config, 0, sizeof(keyboard_config));
 }
 
 /**

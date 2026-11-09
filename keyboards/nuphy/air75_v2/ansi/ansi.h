@@ -162,4 +162,4 @@ typedef struct
     uint8_t ee_side_colour;
     uint8_t sleep_enable;
     uint8_t retain1;
-} user_config_t;
+} keyboard_config_t;
