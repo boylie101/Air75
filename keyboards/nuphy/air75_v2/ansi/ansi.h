@@ -27,13 +27,6 @@ enum custom_keycodes {
     LNK_BLE2,
     LNK_BLE3,
 
-    MAC_TASK,
-    MAC_SEARCH,
-    MAC_VOICE,
-    MAC_CONSOLE,
-    MAC_PRT,
-    MAC_PRTA,
-
     SIDE_VAI,
     SIDE_VAD,
     SIDE_MOD,
@@ -44,7 +37,6 @@ enum custom_keycodes {
     DEV_RESET,
     SLEEP_MODE,
     BAT_SHOW,
-    MAC_DND,
     BAT_NUM,
     RGB_TEST,
     RGB_COL_NEXT,
@@ -156,7 +148,7 @@ typedef struct
     uint8_t rf_state;
     uint8_t rf_charge;
     uint8_t rf_led;
-    uint8_t rf_baterry;
+    uint8_t rf_battery;
     uint8_t sys_sw_state;
 } DEV_INFO_STRUCT;
 

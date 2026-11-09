@@ -23,7 +23,7 @@ void nuphy_rgb_note_keypress(uint8_t row, uint8_t col);
 
 user_config_t user_config;
 DEV_INFO_STRUCT dev_info = {
-    .rf_baterry = 100,
+    .rf_battery = 100,
     .link_mode  = LINK_USB,
     .rf_state   = RF_IDLE,
 };
@@ -87,36 +87,36 @@ void    device_reset_show(void);
 void    device_reset_init(void);
 
 /**
- * @brief  gpio initial.
+ * @brief  Initialize the GPIO pins.
  */
 void gpio_init(void) {
-    /* enable led power driver  */
+    /* Enable the LED power drivers. */
     gpio_set_pin_output(DRIVER_LED_CS_PIN);
     gpio_set_pin_output(DRIVER_SIDE_CS_PIN);
     gpio_write_pin_low(DRIVER_LED_CS_PIN);
     gpio_write_pin_low(DRIVER_SIDE_CS_PIN);
-    /* set side led pin output low */
+    /* Set the side LED data pin low. */
     gpio_set_pin_output(DRIVER_SIDE_PIN);
     gpio_write_pin_low(DRIVER_SIDE_PIN);
-    /* config RF module pin */
+    /* Configure the RF module pins. */
     gpio_set_pin_output(NRF_WAKEUP_PIN);
     gpio_write_pin_high(NRF_WAKEUP_PIN);
     gpio_set_pin_input_high(NRF_TEST_PIN);
-    /* reset RF module */
+    /* Reset the RF module. */
     gpio_set_pin_output(NRF_RESET_PIN);
     gpio_write_pin_low(NRF_RESET_PIN);
     wait_ms(50);
     gpio_write_pin_high(NRF_RESET_PIN);
-    /* config dial switch pin */
+    /* Configure the mode-switch pins. */
     gpio_set_pin_input_high(DEV_MODE_PIN);
     gpio_set_pin_input_high(SYS_MODE_PIN);
-    /* open led DC driver */
+    /* Enable the LED power supply. */
     gpio_set_pin_output(DC_BOOST_PIN);
     gpio_write_pin_high(DC_BOOST_PIN);
 }
 
 /**
- * @brief  long press key process.
+ * @brief  Process long key presses.
  */
 void long_press_key(void) {
     static uint32_t long_press_timer = 0;
@@ -150,7 +150,7 @@ void long_press_key(void) {
         rf_sw_press_delay = 0;
     }
 
-    // The device is restored to factory Settings
+    // Restore the device to factory settings.
     if (f_dev_reset_press) {
         dev_reset_press_delay++;
         if (dev_reset_press_delay >= DEV_RESET_PRESS_DELAY) {
@@ -235,8 +235,8 @@ void break_all_key(void) {
 }
 
 /**
- * @brief  switch device link mode.
- * @param mode : link mode
+ * @brief  Switch the device connection mode.
+ * @param mode The connection mode to select.
  */
 void switch_dev_link(uint8_t mode) {
     if (mode > LINK_USB) {
@@ -262,7 +262,7 @@ void switch_dev_link(uint8_t mode) {
 }
 
 /**
- * @brief  scan dial switch.
+ * @brief  Scan the mode switches.
  */
 void dial_sw_scan(void) {
     uint8_t         dial_scan       = 0;
@@ -342,7 +342,7 @@ void dial_sw_scan(void) {
 }
 
 /**
- * @brief  power on scan dial switch.
+ * @brief  Read the mode switches during startup.
  */
 void dial_sw_fast_scan(void) {
     uint8_t dial_scan_dev = 0;
@@ -376,7 +376,7 @@ void dial_sw_fast_scan(void) {
         wait_ms(1);
     }
 
-    // RF link mode
+    // Select the wireless or USB connection mode.
     if (dial_scan_dev) {
         if (dev_info.link_mode != LINK_USB) {
             switch_dev_link(LINK_USB);
@@ -387,7 +387,7 @@ void dial_sw_fast_scan(void) {
         }
     }
 
-    // Win or Mac
+    // Select the Windows or macOS key layout.
     if (dial_scan_sys) {
         if (dev_info.sys_sw_state != SYS_SW_MAC) {
             default_layer_set(1 << 0);
@@ -407,7 +407,7 @@ void dial_sw_fast_scan(void) {
 }
 
 /**
- * @brief  timer process.
+ * @brief  Update keyboard timers.
  */
 void timer_pro(void) {
     static uint32_t interval_timer = 0;
@@ -439,7 +439,7 @@ void timer_pro(void) {
 }
 
 /**
- * @brief  londing eeprom data.
+ * @brief  Load keyboard settings from EEPROM.
  */
 void loading_eeprom_data(void) {
     eeconfig_read_user_datablock(&user_config, 0, sizeof(user_config));
@@ -468,7 +468,7 @@ void loading_eeprom_data(void) {
     }
 }
 
-/* qmk process record */
+/* QMK key event processing. */
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     if (!process_record_user(keycode, record)) {
         return false;
@@ -568,82 +568,6 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                     dev_info.rf_channel  = rf_sw_temp;
                     dev_info.ble_channel = rf_sw_temp;
                     uart_send_cmd(CMD_SET_LINK, 10, 20);
-                }
-            }
-            return false;
-
-        case MAC_TASK:
-            if (record->event.pressed) {
-                host_consumer_send(0x029F);
-            } else {
-                host_consumer_send(0);
-            }
-            return false;
-
-        case MAC_SEARCH:
-            if (record->event.pressed) {
-                register_code(KC_LGUI);
-                register_code(KC_SPACE);
-                wait_ms(50);
-                unregister_code(KC_LGUI);
-                unregister_code(KC_SPACE);
-            }
-            return false;
-
-        case MAC_VOICE:
-            if (record->event.pressed) {
-                host_consumer_send(0xcf);
-            } else {
-                host_consumer_send(0);
-            }
-            return false;
-
-        case MAC_CONSOLE:
-            if (record->event.pressed) {
-                host_consumer_send(0x02A0);
-            } else {
-                host_consumer_send(0);
-            }
-            return false;
-
-        case MAC_DND:
-            if (record->event.pressed) {
-                host_system_send(0x9b);
-            } else {
-                host_system_send(0);
-            }
-            return false;
-
-        case MAC_PRT:
-            if (record->event.pressed) {
-                register_code(KC_LGUI);
-                register_code(KC_LSFT);
-                register_code(KC_3);
-                wait_ms(50);
-                unregister_code(KC_3);
-                unregister_code(KC_LSFT);
-                unregister_code(KC_LGUI);
-            }
-            return false;
-
-        case MAC_PRTA:
-            if (record->event.pressed) {
-                if (dev_info.sys_sw_state == SYS_SW_WIN) {
-                    register_code(KC_LGUI);
-                    register_code(KC_LSFT);
-                    register_code(KC_S);
-                    wait_ms(50);
-                    unregister_code(KC_S);
-                    unregister_code(KC_LSFT);
-                    unregister_code(KC_LGUI);
-                } else {
-                    register_code(KC_LGUI);
-                    register_code(KC_LSFT);
-                    register_code(KC_4);
-                    wait_ms(50);
-                    unregister_code(KC_4);
-                    unregister_code(KC_LSFT);
-                    unregister_code(KC_LGUI);
                 }
             }
             return false;
@@ -763,7 +687,7 @@ bool rgb_matrix_indicators_kb(void)
     return true;
 }
 
-/* qmk keyboard post init */
+/* QMK keyboard post-initialization. */
 void keyboard_post_init_kb(void) {
     gpio_init();
     rf_uart_init();
@@ -776,7 +700,7 @@ void keyboard_post_init_kb(void) {
     keyboard_post_init_user();
 }
 
-/* qmk housekeeping task */
+/* QMK housekeeping task. */
 void housekeeping_task_kb(void) {
     timer_pro();
 

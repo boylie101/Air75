@@ -87,9 +87,11 @@ void side_ws2812_setleds(rgb_led_t *ledarray, uint16_t leds);
 void rgb_matrix_update_pwm_buffers(void);
 
 /**
- * @brief  side leds set color vaule.
- * @param  index: index of side_leds[].
- * @param  ...
+ * @brief  Set the color of a side LED.
+ * @param  index Index in the side LED array.
+ * @param  red Red channel value.
+ * @param  green Green channel value.
+ * @param  blue Blue channel value.
  */
 void side_rgb_set_color(int index, uint8_t red, uint8_t green, uint8_t blue) {
     side_leds[index].r = red;
@@ -98,16 +100,16 @@ void side_rgb_set_color(int index, uint8_t red, uint8_t green, uint8_t blue) {
 }
 
 /**
- * @brief  refresh side leds.
+ * @brief  Refresh the side LEDs.
  */
 void side_rgb_refresh(void) {
     side_ws2812_setleds(side_leds, SIDE_LED_NUM);
 }
 
 /**
- * @brief  Adjusting the brightness of side lights.
- * @param  dir: 0 - decrease, 1 - increase.
- * @note  save to eeprom.
+ * @brief  Adjust the side-light brightness.
+ * @param  dir 0 decreases brightness; 1 increases it.
+ * @note  Saves the setting to EEPROM.
  */
 void side_light_control(uint8_t dir) {
     if (dir) {
@@ -128,9 +130,9 @@ void side_light_control(uint8_t dir) {
 }
 
 /**
- * @brief  Adjusting the speed of side lights.
- * @param  dir: 0 - decrease, 1 - increase.
- * @note  save to eeprom.
+ * @brief  Adjust the side-light animation speed.
+ * @param  dir 0 decreases speed; 1 increases it.
+ * @note  Saves the setting to EEPROM.
  */
 void side_speed_control(uint8_t dir) {
     if ((side_speed) > SIDE_SPEED_MAX) {
@@ -151,9 +153,9 @@ void side_speed_control(uint8_t dir) {
 }
 
 /**
- * @brief  Switch to the next color of side lights.
- * @param  dir: 0 - prev, 1 - next.
- * @note  save to eeprom.
+ * @brief  Select the previous or next side-light color.
+ * @param  dir 0 selects the previous color; 1 selects the next.
+ * @note  Saves the setting to EEPROM.
  */
 void side_colour_control(uint8_t dir) {
     side_rgb = 0;
@@ -168,9 +170,9 @@ void side_colour_control(uint8_t dir) {
 }
 
 /**
- * @brief  Change the color mode of side lights.
- * @param  dir: 0 - prev, 1 - next.
- * @note  save to eeprom.
+ * @brief  Select the previous or next side-light effect.
+ * @param  dir 0 selects the previous effect; 1 selects the next.
+ * @note  Saves the setting to EEPROM.
  */
 void side_mode_control(uint8_t dir) {
     if (dir) {
@@ -191,8 +193,7 @@ void side_mode_control(uint8_t dir) {
 }
 
 /**
- * @brief  set left side leds.
- * @param  ...
+ * @brief  Set the color of the left-side LEDs.
  */
 void set_left_rgb(uint8_t r, uint8_t g, uint8_t b) {
     for (int i = 0; i < 6; i++) {
@@ -201,8 +202,7 @@ void set_left_rgb(uint8_t r, uint8_t g, uint8_t b) {
 }
 
 /**
- * @brief  set right side leds.
- * @param  ...
+ * @brief  Set the color of the right-side LEDs.
  */
 void set_right_rgb(uint8_t r, uint8_t g, uint8_t b) {
     for (int i = 6; i < 12; i++) {
@@ -211,7 +211,7 @@ void set_right_rgb(uint8_t r, uint8_t g, uint8_t b) {
 }
 
 /**
- * @brief  set left side leds.
+ * @brief  Set the color of the left-side LEDs.
  */
 void sys_sw_led_show(void) {
     static uint32_t sys_show_timer = 0;
@@ -295,10 +295,10 @@ void sys_led_show(void) {
 
 /**
  * @brief  light_point_playing.
- * @param trend:
- * @param step:
- * @param len:
- * @param point:
+ * @param trend Whether to move forward through the sequence.
+ * @param step Number of positions to advance.
+ * @param len Number of positions in the sequence.
+ * @param point Current position in the sequence.
  */
 static void light_point_playing(uint8_t trend, uint8_t step, uint8_t len, uint8_t *point) {
     if (trend) {
@@ -496,7 +496,7 @@ static void side_off_mode_show(void) {
  */
 void rf_led_show(void) {
     static uint32_t rf_blink_timer = 0;
-    uint16_t        rf_blink_priod = 0;
+    uint16_t        rf_blink_period = 0;
 
     if (rf_blink_cnt || (rf_link_show_time < RF_LINK_SHOW_TIME)) {
         if (dev_info.link_mode == LINK_RF_24) {
@@ -519,18 +519,18 @@ void rf_led_show(void) {
 
     if (rf_blink_cnt) {
         if (dev_info.rf_state == RF_PAIRING) {
-            rf_blink_priod = RF_LED_PAIR_PERIOD;
+            rf_blink_period = RF_LED_PAIR_PERIOD;
         } else {
-            rf_blink_priod = RF_LED_LINK_PERIOD;
+            rf_blink_period = RF_LED_LINK_PERIOD;
         }
 
-        if (timer_elapsed32(rf_blink_timer) > (rf_blink_priod >> 1)) {
+        if (timer_elapsed32(rf_blink_timer) > (rf_blink_period >> 1)) {
             r_temp = 0x00;
             g_temp = 0x00;
             b_temp = 0x00;
         }
 
-        if (timer_elapsed32(rf_blink_timer) >= rf_blink_priod) {
+        if (timer_elapsed32(rf_blink_timer) >= rf_blink_period) {
             rf_blink_cnt--;
             rf_blink_timer = timer_read32();
         }
@@ -546,7 +546,7 @@ void bat_num_led(uint8_t bat_percent)
 {
     uint8_t r, g, b;
 
-    // set color
+    // Choose a color based on the battery level.
     if (bat_percent <= 15) {
         r = 0xff; g = 0x00; b = 0x00;
     } else if (bat_percent <= 50) {
@@ -557,7 +557,7 @@ void bat_num_led(uint8_t bat_percent)
         r = 0x00; g = 0xff; b = 0x00;
     }
 
-    // set percent
+    // Light the keys that represent the battery percentage.
     if (bat_percent >= 1) {
         rgb_matrix_set_color(29, r, g, b);
     }
@@ -592,7 +592,7 @@ void bat_num_led(uint8_t bat_percent)
 
 void num_led_show(void)
 {
-    bat_num_led(dev_info.rf_baterry);
+        bat_num_led(dev_info.rf_battery);
 }
 
 /**
@@ -656,7 +656,7 @@ void bat_led_show(void) {
         f_init        = 0;
         bat_show_time = timer_read32();
         charge_state  = dev_info.rf_charge;
-        bat_percent   = dev_info.rf_baterry;
+        bat_percent   = dev_info.rf_battery;
     }
 
     if (charge_state != dev_info.rf_charge) {
@@ -677,13 +677,13 @@ void bat_led_show(void) {
         if (charge_state == 0x03) {
             bat_show_breath = true;
         } else if (charge_state & 0x01) {
-            dev_info.rf_baterry = 100;
+            dev_info.rf_battery = 100;
         }
     }
 
-    if (bat_percent != dev_info.rf_baterry) {
+    if (bat_percent != dev_info.rf_battery) {
         if (timer_elapsed32(bat_per_debounce) > 1000) {
-            bat_percent = dev_info.rf_baterry;
+            bat_percent = dev_info.rf_battery;
         }
     } else {
         bat_per_debounce = timer_read32();
@@ -774,14 +774,14 @@ void device_reset_init(void) {
 */
 void rgb_test_show(void)
 {
-    // open power control
+    // Enable the LED power supply.
     gpio_write_pin_high(DC_BOOST_PIN);
     gpio_set_pin_output(DRIVER_LED_CS_PIN);
     gpio_write_pin_low(DRIVER_LED_CS_PIN);
     gpio_set_pin_output(DRIVER_SIDE_CS_PIN);
     gpio_write_pin_low(DRIVER_SIDE_CS_PIN);
 
-    // set test color
+    // Set the test color.
     rgb_matrix_set_color_all(0xFF, 0x00, 0x00);
     rgb_matrix_update_pwm_buffers();
     set_left_rgb(0xff, 0x00, 0x00);

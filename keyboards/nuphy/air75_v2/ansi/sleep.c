@@ -29,7 +29,7 @@ extern bool            f_wakeup_prepare;
 uint8_t uart_send_cmd(uint8_t cmd, uint8_t ack_cnt, uint8_t delayms);
 
 /**
- * @brief  Sleep Handle.
+ * @brief  Handle sleep and wake events.
  */
 void sleep_handle(void) {
     static uint32_t delay_step_timer = 0;
@@ -53,7 +53,7 @@ void sleep_handle(void) {
                 uart_send_cmd(CMD_SLEEP, 5, 5);
             }
 
-            // power off led
+            // Turn off the LED power supply.
             gpio_set_pin_output(DC_BOOST_PIN);
             gpio_write_pin_low(DC_BOOST_PIN);
 
@@ -64,7 +64,7 @@ void sleep_handle(void) {
         f_wakeup_prepare = 1;
     }
 
-    // wakeup check
+    // Check whether the keyboard should wake up.
     if (f_wakeup_prepare && (no_act_time < 10)) {
         f_wakeup_prepare = 0;
 
@@ -94,7 +94,7 @@ void sleep_handle(void) {
         }
     }
 
-    // sleep check
+    // Check whether the keyboard should enter sleep mode.
     if (f_goto_sleep || f_wakeup_prepare) {
         return;
     }

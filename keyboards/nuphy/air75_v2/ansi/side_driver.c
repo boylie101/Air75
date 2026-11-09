@@ -87,10 +87,10 @@ void side_sendByte(uint8_t byte)
     }
 }
 
-// Setleds for standard RGB
+// Send color data to the LEDs in standard RGB format.
 void side_ws2812_setleds(rgb_led_t *ledarray, uint16_t leds)
 {
-    // this code is very time dependent, so we need to disable interrupts
+    // Timing is critical here, so disable interrupts during transmission.
     chSysLock();
 
     for (uint8_t i = 0; i < leds; i++) {

@@ -20,6 +20,12 @@
     "processor": "STM32F072",
     "bootloader": "stm32-dfu",
     "debounce": 2,
+    "community_layouts": [
+        "75_ansi"
+    ],
+    "layout_aliases": {
+        "LAYOUT_75_ansi": "LAYOUT_ansi_84"
+    },
     "matrix_pins": {
         "cols": [
             "A4",

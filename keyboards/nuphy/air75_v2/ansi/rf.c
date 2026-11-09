@@ -61,10 +61,10 @@ void           uart_receive_pro(void);
 void           break_all_key(void);
 
 /**
- * @brief Uart auto nkey send
+ * @brief Automatically send NKRO key updates over UART.
  */
 bool f_bit_kb_act = 0;
-static void uart_auto_nkey_send(uint8_t *pre_bit_report, uint8_t *now_bit_report, uint8_t size)
+static void uart_auto_nkro_send(uint8_t *pre_bit_report, uint8_t *now_bit_report, uint8_t size)
 {
     uint8_t i, j, byte_index;
     uint8_t change_mask, offset_mask;
@@ -124,7 +124,7 @@ static void uart_auto_nkey_send(uint8_t *pre_bit_report, uint8_t *now_bit_report
 
 
 /**
- * @brief  Uart send keys report.
+ * @brief  Send a keyboard report over UART.
  */
 void uart_send_report_func(void)
 {
@@ -150,8 +150,8 @@ void uart_send_report_func(void)
 }
 
 /**
- * @brief  Uart send consumer keys report.
- * @note Call in rf_driver.c
+ * @brief  Send a consumer-control report over UART.
+ * @note Called from rf_driver.c.
  */
 void uart_send_consumer_report(report_extra_t *report) {
     no_act_time = 0;
@@ -159,8 +159,8 @@ void uart_send_consumer_report(report_extra_t *report) {
 }
 
 /**
- * @brief  Uart send mouse keys report.
- * @note Call in rf_driver.c
+ * @brief  Send a mouse report over UART.
+ * @note Called from rf_driver.c.
  */
 void uart_send_mouse_report(report_mouse_t *report) {
     no_act_time = 0;
@@ -168,8 +168,8 @@ void uart_send_mouse_report(report_mouse_t *report) {
 }
 
 /**
- * @brief  Uart send system keys report.
- * @note Call in rf_driver.c
+ * @brief  Send a system-control report over UART.
+ * @note Called from rf_driver.c.
  */
 void uart_send_system_report(report_extra_t *report) {
     no_act_time = 0;
@@ -177,8 +177,8 @@ void uart_send_system_report(report_extra_t *report) {
 }
 
 /**
- * @brief  Uart send byte keys report.
- * @note Call in rf_driver.c
+ * @brief  Send a standard keyboard report over UART.
+ * @note Called from rf_driver.c.
  */
 void uart_send_report_keyboard(report_keyboard_t *report) {
     no_act_time      = 0;
@@ -188,12 +188,12 @@ void uart_send_report_keyboard(report_keyboard_t *report) {
 }
 
 /**
- * @brief  Uart send bit keys report.
- * @note Call in rf_driver.c
+ * @brief  Send an NKRO keyboard report over UART.
+ * @note Called from rf_driver.c.
  */
 void uart_send_report_nkro(report_nkro_t *report) {
     no_act_time = 0;
-    uart_auto_nkey_send(bitkb_report_buf, &report->mods, NKRO_REPORT_BITS + 1);
+    uart_auto_nkro_send(bitkb_report_buf, &report->mods, NKRO_REPORT_BITS + 1);
     memcpy(&bitkb_report_buf[0], &report->mods, NKRO_REPORT_BITS + 1);
 }
 /**
@@ -286,11 +286,11 @@ void RF_Protocol_Receive(void) {
                 dev_info.rf_charge = Usart_Mgr.RXDBuf[7];
 
                 if (Usart_Mgr.RXDBuf[8] <= 100) {
-                    dev_info.rf_baterry = Usart_Mgr.RXDBuf[8];
+                    dev_info.rf_battery = Usart_Mgr.RXDBuf[8];
                 }
 
                 if (dev_info.rf_charge & 0x01) {
-                    dev_info.rf_baterry = 100;
+                    dev_info.rf_battery = 100;
                 }
             } else {
                 if (dev_info.rf_state != RF_INVALID) {
@@ -339,10 +339,10 @@ invalid_frame:
     Usart_Mgr.RXDOverTime = 0;
 }
 /**
- * @brief  Uart send cmd.
- * @param  cmd: cmd.
- * @param  wait_ack: wait time for ack after sending.
- * @param  delayms: delay before sending.
+ * @brief  Send a command over UART.
+ * @param  cmd Command to send.
+ * @param  wait_ack Number of acknowledgement attempts.
+ * @param  delayms Delay before sending the command.
  */
 uint8_t uart_send_cmd(uint8_t cmd, uint8_t wait_ack, uint8_t delayms) {
     wait_ms(delayms);
@@ -577,9 +577,9 @@ void dev_sts_sync(void) {
 }
 
 /**
- * @brief Uart send bytes.
- * @param Buffer data buf
- * @param Length data length
+ * @brief Send a byte buffer over UART.
+ * @param Buffer Data to send.
+ * @param Length Number of bytes to send.
  */
 void UART_Send_Bytes(uint8_t *Buffer, uint32_t Length) {
     if (uart_repeat_flag) {
@@ -606,9 +606,9 @@ void UART_Send_Bytes(uint8_t *Buffer, uint32_t Length) {
 }
 
 /**
- * @brief get checksum.
- * @param buf data buf
- * @param len data length
+ * @brief Calculate the packet checksum.
+ * @param buf Data buffer.
+ * @param len Number of bytes in the buffer.
  */
 uint8_t get_checksum(uint8_t *buf, uint8_t len) {
     uint8_t i;
@@ -624,10 +624,10 @@ uint8_t get_checksum(uint8_t *buf, uint8_t len) {
 }
 
 /**
- * @brief Uart send report.
- * @param report_type  report_type
- * @param report_buf  report_buf
- * @param report_size  report_size
+ * @brief Send a report over UART.
+ * @param report_type Report type identifier.
+ * @param report_buf Report data.
+ * @param report_size Number of bytes in the report.
  */
 void uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_size) {
     if (f_dial_sw_init_ok == 0) {
@@ -658,7 +658,7 @@ void uart_send_report(uint8_t report_type, uint8_t *report_buf, uint8_t report_s
 }
 
 /**
- * @brief Uart receives data and processes it after completion,.
+ * @brief Receive UART data and process complete frames.
  */
 void uart_receive_pro(void) {
     static bool rcv_start = false;
@@ -695,10 +695,10 @@ void uart_receive_pro(void) {
     }
 }
 /**
- * @brief  RF uart initial.
+ * @brief  Initialize the RF UART.
  */
 void rf_uart_init(void) {
-    /* set uart buad as 460800 */
+    /* Set the UART baud rate to 460800. */
     uart_init(460800);
 
     /* Enable parity check */
@@ -706,13 +706,13 @@ void rf_uart_init(void) {
     USART1->CR1 |= USART_CR1_M0 | USART_CR1_PCE;
     USART1->CR1 |= USART_CR1_UE;
 
-    /* set Rx and Tx pin pull up */
+    /* Enable pull-ups on the RX and TX pins. */
     GPIOB->OSPEEDR &= ~(GPIO_OSPEEDER_OSPEEDR6 | GPIO_OSPEEDER_OSPEEDR7);
     GPIOB->PUPDR |= (GPIO_PUPDR_PUPDR6_0 | GPIO_PUPDR_PUPDR7_0);
 }
 
 /**
- * @brief RF module initial.
+ * @brief Initialize the RF module.
  */
 void rf_device_init(void) {
     uint8_t timeout = 0;
