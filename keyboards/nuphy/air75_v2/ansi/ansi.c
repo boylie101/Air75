@@ -441,10 +441,14 @@ void timer_pro(void) {
  */
 void loading_eeprom_data(void) {
     eeconfig_read_user_datablock(&user_config, 0, sizeof(user_config));
-    if (user_config.default_brightness_flag != 0xA5) {
-        /* first power on, set rgb matrix brightness at middle level*/
-        rgb_matrix_sethsv(255, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
-        user_config.default_brightness_flag = 0xA5;
+    if (user_config.default_brightness_flag != 0xA6) {
+        /* Updated lighting defaults: static sage green for key and side LEDs. */
+        rgb_matrix_enable();
+        rgb_matrix_mode(RGB_MATRIX_SOLID_COLOR);
+        rgb_matrix_sethsv(59, 38, 154);
+        side_mode = 2;
+        side_colour = 8;
+        user_config.default_brightness_flag = 0xA6;
         user_config.ee_side_mode            = side_mode;
         user_config.ee_side_light           = side_light;
         user_config.ee_side_speed           = side_speed;

@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define SIDE_BRIGHT_MAX     4
 #define SIDE_SPEED_MAX      4
-#define SIDE_COLOUR_MAX     8
+#define SIDE_COLOUR_MAX     9
 
 #define SIDE_LINE           6
 #define SIDE_LED_NUM        12
@@ -765,11 +765,11 @@ void device_reset_show(void) {
  * @brief  device_reset_init.
  */
 void device_reset_init(void) {
-    side_mode       = 0;
+    side_mode       = 2;
     side_light      = 3;
     side_speed      = 2;
     side_rgb        = 1;
-    side_colour     = 0;
+    side_colour     = 8;
     side_play_point = 0;
 
     side_play_cnt   = 0;
@@ -778,11 +778,11 @@ void device_reset_init(void) {
     f_bat_hold = false;
 
     rgb_matrix_enable();
-    rgb_matrix_mode(RGB_MATRIX_DEFAULT_MODE);
+    rgb_matrix_mode(RGB_MATRIX_SOLID_COLOR);
     rgb_matrix_set_speed(255 - RGB_MATRIX_SPD_STEP * 2);
-    rgb_matrix_sethsv(255, 255, RGB_MATRIX_MAXIMUM_BRIGHTNESS - RGB_MATRIX_VAL_STEP * 2);
+    rgb_matrix_sethsv(59, 38, 154);
 
-    user_config.default_brightness_flag = 0xA5;
+    user_config.default_brightness_flag = 0xA6;
     user_config.ee_side_mode            = side_mode;
     user_config.ee_side_light           = side_light;
     user_config.ee_side_speed           = side_speed;
