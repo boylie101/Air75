@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
-// layer Linux
+// layer Linux (selected by Mac slider position)
 [0] = LAYOUT_75_ansi(
 	KC_ESC,	KC_BRID,	KC_BRIU,	LGUI(KC_D),	LGUI(KC_E),	LGUI(S(KC_M)),	LGUI(S(KC_D)),	KC_MPRV,	KC_MPLY,	KC_MNXT,	KC_MUTE,	KC_VOLD,	KC_VOLU,	S(KC_PSCR),	KC_INS,	KC_DEL,
 	KC_GRV, 	KC_1,   	KC_2,   	KC_3,  		KC_4,   	KC_5,   	KC_6,   	KC_7,   	KC_8,   	KC_9,  		KC_0,   	KC_MINS,	KC_EQL, 				KC_BSPC,	KC_PGUP,
