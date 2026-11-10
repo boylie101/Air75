@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 // layer Linux
-[0] = LAYOUT_ansi_84(
+[0] = LAYOUT_75_ansi(
 	KC_ESC,	KC_BRID,	KC_BRIU,	LGUI(KC_D),	LGUI(KC_E),	LGUI(S(KC_M)),	LGUI(S(KC_D)),	KC_MPRV,	KC_MPLY,	KC_MNXT,	KC_MUTE,	KC_VOLD,	KC_VOLU,	S(KC_PSCR),	KC_INS,	KC_DEL,
 	KC_GRV, 	KC_1,   	KC_2,   	KC_3,  		KC_4,   	KC_5,   	KC_6,   	KC_7,   	KC_8,   	KC_9,  		KC_0,   	KC_MINS,	KC_EQL, 				KC_BSPC,	KC_PGUP,
 	KC_TAB, 	KC_Q,   	KC_W,   	KC_E,  		KC_R,   	KC_T,   	KC_Y,   	KC_U,   	KC_I,   	KC_O,  		KC_P,   	KC_LBRC,	KC_RBRC, 				KC_BSLS,	KC_PGDN,
@@ -30,16 +30,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 	KC_LCTL,	KC_LGUI,	KC_LALT,										KC_SPC, 							KC_RGUI,	MO(1),   	KC_RCTL,				KC_LEFT,	KC_DOWN,    KC_RGHT),
 
 // layer Linux Fn
-[1] = LAYOUT_ansi_84(
+[1] = LAYOUT_75_ansi(
 	_______,	KC_F1,	KC_F2,	KC_F3,	KC_F4,	KC_F5,	KC_F6,	KC_F7,	KC_F8,	KC_F9,	KC_F10,	KC_F11,	KC_F12,	S(KC_PSCR),	_______,	_______,
 	_______, 	LNK_BLE1,  	LNK_BLE2,  	LNK_BLE3,  	LNK_RF,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	_______, 				_______,	_______,
 	_______, 	_______,   	_______,   	_______,  	DEV_RESET,   	RGB_TEST,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,		_______, 			KC_NUBS,	_______,
-	_______,	_______,	SLEEP_MODE,	_______,	_______,	_______,	_______,	_______,	_______,	MO(4),	_______,	_______,	_______,	_______,
-	_______,	_______,	_______,	_______,	_______,	BAT_SHOW,	BAT_NUM,	MS_WIGL,	RM_SPDD,	RM_SPDU,	_______,	_______,	RM_VALU,	_______,
+	_______,	_______,RGB_SAT_UP,	_______,	_______,	_______,RGB_HUE_UP,	_______,	_______,	MO(4),	_______,	_______,	_______,	_______,
+	_______,	SLEEP_MODE,	_______,	_______,RGB_VAL_UP,	BAT_SHOW,	BAT_NUM,	MS_WIGL,	RM_SPDD,	RM_SPDU,	_______,	_______,	RM_VALU,	_______,
 	_______,	_______,	_______,										_______, 							_______,	MO(1),   	_______,				RM_NEXT,	RM_VALD,    RGB_COL_NEXT),
 
 // layer Windows
-[2] = LAYOUT_ansi_84(
+[2] = LAYOUT_75_ansi(
 	KC_ESC,	KC_BRID,	KC_BRIU,	KC_MPRV,	KC_MPLY,	KC_MNXT,	KC_MUTE,	KC_VOLD,	KC_VOLU,	_______,	_______,	_______,	_______,	_______,	KC_INS,	KC_DEL,
 	KC_GRV, 	KC_1,   	KC_2,   	KC_3,  		KC_4,   	KC_5,   	KC_6,   	KC_7,   	KC_8,   	KC_9,  		KC_0,   	KC_MINS,	KC_EQL, 				KC_BSPC,	KC_PGUP,
 	KC_TAB, 	KC_Q,   	KC_W,   	KC_E,  		KC_R,   	KC_T,   	KC_Y,   	KC_U,   	KC_I,   	KC_O,  		KC_P,   	KC_LBRC,	KC_RBRC, 				KC_BSLS,	KC_PGDN,
@@ -48,16 +48,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 	KC_LCTL,	KC_LGUI,	KC_LALT,										KC_SPC, 							KC_RALT,	MO(3),   	KC_RCTL,				KC_LEFT,	KC_DOWN,    KC_RGHT),
 
 // layer Windows Fn
-[3] = LAYOUT_ansi_84(
+[3] = LAYOUT_75_ansi(
 	_______,	KC_F1,	KC_F2,	LGUI(KC_D),	LGUI(KC_E),	LGUI(LALT(KC_K)),	LGUI(KC_N),	KC_F7,	KC_F8,	KC_F9,	KC_F10,	KC_F11,	KC_F12,	KC_PSCR,	_______,	_______,
 	_______, 	LNK_BLE1,  	LNK_BLE2,  	LNK_BLE3,  	LNK_RF,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	_______, 				_______,	_______,
 	_______, 	_______,   	_______,   	_______,  	DEV_RESET,   	RGB_TEST,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,		_______, 			KC_NUBS,	_______,
-	_______,	_______,	SLEEP_MODE,	_______,	_______,	_______,	_______,	_______,	_______,	MO(4),	_______,	_______,	_______,	_______,
-	_______,	_______,	_______,	_______,	_______,	BAT_SHOW,	BAT_NUM,	MS_WIGL,	RM_SPDD,	RM_SPDU,	_______,	_______,	RM_VALU,	_______,
+	_______,	_______,RGB_SAT_UP,	_______,	_______,	_______,RGB_HUE_UP,	_______,	_______,	MO(4),	_______,	_______,	_______,	_______,
+	_______,	SLEEP_MODE,	_______,	_______,RGB_VAL_UP,	BAT_SHOW,	BAT_NUM,	MS_WIGL,	RM_SPDD,	RM_SPDU,	_______,	_______,	RM_VALU,	_______,
 	_______,	_______,	_______,										_______, 							_______,	MO(3),   	_______,				RM_NEXT,	RM_VALD,    RGB_COL_NEXT),
 
 // layer 4
-[4] = LAYOUT_ansi_84(
+[4] = LAYOUT_75_ansi(
 	_______, 	_______,  	_______,  	_______, 	_______,  	_______,  	_______,  	_______,  	_______,  	_______, 	_______, 	_______, 	_______, 	_______,	_______,	_______,
 	_______, 	_______,   	_______,   	_______,  	_______,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	_______, 				_______,	_______,
 	_______, 	_______,   	_______,   	_______,  	_______,   	_______,   	_______,   	_______,   	_______,   	_______,  	_______,   	_______,	_______, 				_______,	_______,
@@ -152,7 +152,10 @@ bool rgb_matrix_indicators_user(void) {
     }
     set_key_led(2, 14, white_r, white_g, white_b); // Mac print
     set_key_led(3, 9, purple_r, purple_g, purple_b);  // Fn + L: side-light controls
-    set_key_led(3, 2, red_r, red_g, red_b); // Fn + S: sleep toggle
+    set_key_led(4, 2, red_r, red_g, red_b); // Fn + Z: sleep toggle
+    set_key_led(3, 6, white_r, white_g, white_b); // Fn + H: hue
+    set_key_led(3, 2, white_r, white_g, white_b); // Fn + S: saturation
+    set_key_led(4, 5, white_r, white_g, white_b); // Fn + V: value
     set_key_led(2, 4, red_r, red_g, red_b);           // Fn + R: reset (hold 3 seconds)
     set_key_led(2, 5, white_r, white_g, white_b);  // Fn + T: RGB test mode
     set_key_led(2, 13, blue_r, blue_g, blue_b);          // Fn + backslash: backslash / pipe (blue)

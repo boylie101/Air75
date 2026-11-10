@@ -20,6 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "rf_driver.h"
 
 void nuphy_rgb_note_keypress(uint8_t row, uint8_t col);
+void nuphy_cycle_color_next(void);
+void nuphy_adjust_user_color(uint8_t component);
+
+static uint16_t rgb_adjust_keycode;
+static uint32_t rgb_adjust_repeat_timer;
 
 keyboard_config_t keyboard_config;
 DEV_INFO_STRUCT dev_info = {
@@ -478,6 +483,18 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     }
     no_act_time = 0;
     switch (keycode) {
+        case RGB_HUE_UP:
+        case RGB_SAT_UP:
+        case RGB_VAL_UP:
+            if (record->event.pressed) {
+                rgb_adjust_keycode = keycode;
+                rgb_adjust_repeat_timer = timer_read32();
+                nuphy_adjust_user_color(keycode == RGB_HUE_UP ? 0 : keycode == RGB_SAT_UP ? 1 : 2);
+            } else if (rgb_adjust_keycode == keycode) {
+                rgb_adjust_keycode = 0;
+            }
+            return false;
+
         case RF_DFU:
             if (record->event.pressed) {
                 if (dev_info.link_mode != LINK_USB) {
@@ -597,20 +614,8 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case RGB_COL_NEXT: {
-            static uint8_t colour_index = 0xff;
-            static const uint8_t hues[] = {68, 15, 128, 0};
-            static const uint8_t sats[] = {118, 255, 255, 0};
-            static const uint8_t vals[] = {149, 255, 255, 255};
             if (record->event.pressed) {
-                if (colour_index == 0xff) {
-                    uint8_t hue = rgb_matrix_get_hue();
-                    uint8_t sat = rgb_matrix_get_sat();
-                    colour_index = (sat < 10) ? 3 : (hue < 5 || hue > 250) ? 3 :
-                                   (hue < 35) ? 1 : (hue > 100 && hue < 160) ? 2 : 0;
-                }
-                colour_index = (colour_index + 1) % 4;
-                rgb_matrix_mode(RGB_MATRIX_SOLID_COLOR);
-                rgb_matrix_sethsv(hues[colour_index], sats[colour_index], vals[colour_index]);
+                nuphy_cycle_color_next();
             }
             return false;
         }
@@ -717,4 +722,9 @@ void housekeeping_task_kb(void) {
     side_led_show();
 
     sleep_handle();
+
+    if (rgb_adjust_keycode && timer_elapsed32(rgb_adjust_repeat_timer) >= 50) {
+        rgb_adjust_repeat_timer = timer_read32();
+        nuphy_adjust_user_color(rgb_adjust_keycode == RGB_HUE_UP ? 0 : rgb_adjust_keycode == RGB_SAT_UP ? 1 : 2);
+    }
 }

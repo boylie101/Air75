@@ -40,12 +40,43 @@ void nuphy_rgb_note_keypress(uint8_t row, uint8_t col) {
     }
 }
 
-static const rgb_t nuphy_cycle_colors[] = {
-    {107, 149, 80},  // Sage green backlight
-    {214, 93, 38},   // Orange
-    {0, 255, 255},   // Cyan
-    {255, 255, 255}, // White
+// Shared by the automatic color cycle and RGB_COL_NEXT (Fn + Right).
+// Keep these as HSV so solid color and the cycle render the same palette.
+hsv_t nuphy_cycle_colors[] = {
+    {68, 118, 149}, // Sage green backlight
+    {15, 255, 255}, // Orange
+    {128, 255, 255}, // Cyan
+    {0, 0, 255},     // White
+    {0, 255, 255},   // User-adjustable color
 };
+static uint8_t nuphy_selected_color = 0xff;
+
+void nuphy_cycle_color_next(void) {
+    if (nuphy_selected_color == 0xff) {
+        hsv_t current = rgb_matrix_get_hsv();
+        nuphy_selected_color = (current.s < 10) ? 3 : (current.h < 5 || current.h > 250) ? 3 :
+                               (current.h < 35) ? 1 : (current.h > 100 && current.h < 160) ? 2 : 0;
+    }
+    nuphy_selected_color = (nuphy_selected_color + 1) % ARRAY_SIZE(nuphy_cycle_colors);
+    rgb_matrix_mode(RGB_MATRIX_SOLID_COLOR);
+    hsv_t color = nuphy_cycle_colors[nuphy_selected_color];
+    rgb_matrix_sethsv(color.h, color.s, color.v);
+}
+
+void nuphy_adjust_user_color(uint8_t component) {
+    hsv_t *color = &nuphy_cycle_colors[4];
+    nuphy_selected_color = 4;
+    if (component == 0) {
+        color->h++;
+    } else if (component == 1) {
+        color->s++;
+    } else {
+        color->v++;
+    }
+    if (nuphy_selected_color == 4 && rgb_matrix_get_mode() == RGB_MATRIX_SOLID_COLOR) {
+        rgb_matrix_sethsv_noeeprom(color->h, color->s, color->v);
+    }
+}
 
 static bool NUPHY_COLOR_CYCLE(effect_params_t *params) {
     RGB_MATRIX_USE_LIMITS(led_min, led_max);
@@ -58,8 +89,8 @@ static bool NUPHY_COLOR_CYCLE(effect_params_t *params) {
     uint8_t  color_index = (elapsed / segment_ms) % ARRAY_SIZE(nuphy_cycle_colors);
     uint8_t  next_index = (color_index + 1) % ARRAY_SIZE(nuphy_cycle_colors);
     uint8_t  blend = (elapsed % segment_ms) * 255 / segment_ms;
-    rgb_t    first = nuphy_cycle_colors[color_index];
-    rgb_t    second = nuphy_cycle_colors[next_index];
+    rgb_t    first = rgb_matrix_hsv_to_rgb(nuphy_cycle_colors[color_index]);
+    rgb_t    second = rgb_matrix_hsv_to_rgb(nuphy_cycle_colors[next_index]);
     rgb_t    rgb = {
         .r = (first.r * (255 - blend) + second.r * blend) / 255,
         .g = (first.g * (255 - blend) + second.g * blend) / 255,

@@ -165,11 +165,8 @@
         "pin": "A7"
     },
     "community_layouts": ["75_ansi"],
-    "layout_aliases": {
-        "LAYOUT_75_ansi": "LAYOUT_ansi_84"
-    },
     "layouts": {
-        "LAYOUT_ansi_84": {
+        "LAYOUT_75_ansi": {
             "layout": [
                 {"label": "Esc", "matrix": [0, 0], "x": 0, "y": 0},
                 {"label": "F1", "matrix": [0, 1], "x": 1, "y": 0},

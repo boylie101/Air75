@@ -347,7 +347,7 @@ The baseline `keyboard.json` defines:
 - USB VID/PID `0x19F5:0x3246`, device version `1.2.0`, and `no_startup_check: true`.
 - A 6-row × 17-column matrix, COL2ROW, 2 ms debounce, with explicit row/column GPIO assignments.
 - Features: Bootmagic, Mouse Keys, Extra Keys, Console, NKRO, Key Lock and RGB Matrix enabled; QMK Command disabled.
-- Layout `LAYOUT_ansi_84`.
+- Layout `LAYOUT_75_ansi`.
 - Main RGB Matrix using WS2812, 85 layout entries, centre point [80, 30], max brightness 128 and a broad set of enabled animations.
 
 Treat USB identity, matrix pins, diode direction, layout mapping and RGB LED mapping as hardware invariants. Preserve the exact matrix-to-LED mapping and flags. Build success cannot detect a physically incorrect mapping.
@@ -435,7 +435,7 @@ The public USB wake API and asynchronous endpoint/event handling must be tested 
 
 ### 14.8 Port completion gates added by this pass
 
-- [ ] Preserve VID/PID, device version, matrix pins, COL2ROW direction, 2 ms debounce and `LAYOUT_ansi_84`.
+- [ ] Preserve VID/PID, device version, matrix pins, COL2ROW direction, 2 ms debounce and `LAYOUT_75_ansi`.
 - [ ] Preserve the 85-entry main RGB Matrix map and the independent 12-LED side strip.
 - [ ] Confirm USART1 parity/word-length configuration against the module's required UART framing.
 - [ ] Confirm exact RF frame boundaries/checksum behaviour and safe maximum packet length.

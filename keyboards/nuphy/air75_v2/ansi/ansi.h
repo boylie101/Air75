@@ -40,6 +40,9 @@ enum custom_keycodes {
     BAT_NUM,
     RGB_TEST,
     RGB_COL_NEXT,
+    RGB_HUE_UP,
+    RGB_SAT_UP,
+    RGB_VAL_UP,
     MS_WIGL
 };
 

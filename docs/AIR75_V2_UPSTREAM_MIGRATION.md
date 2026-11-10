@@ -221,7 +221,7 @@ The baseline keyboard definition is `keyboards/nuphy/air75_v2/ansi/keyboard.json
 - USB identity: VID `0x19F5`, PID `0x3246`, device version `1.2.0`; `no_startup_check` is enabled. Preserve these unless there is a deliberate, documented reason to change them.
 - Matrix: 6 rows × 17 columns, COL2ROW, 2 ms debounce. The configured row and column GPIOs are explicit in `keyboard.json`; copy them exactly and review against the physical board before changing.
 - Enabled features: Bootmagic, Mouse Keys, Extra Keys, Console, NKRO, Key Lock and RGB Matrix. `command` is explicitly disabled.
-- Layout: `LAYOUT_ansi_84`.
+- Layout: `LAYOUT_75_ansi`.
 - RGB Matrix: WS2812 driver, 85 LED layout entries, centre point [80, 30], maximum brightness 128, with a large animation set. Preserve the exact LED-to-matrix map and flags; a successful build does not detect a physically incorrect LED map.
 - The side strip is a separate 12-LED WS2812 chain driven on C8; it is not the 85-entry main RGB Matrix layout.
 
