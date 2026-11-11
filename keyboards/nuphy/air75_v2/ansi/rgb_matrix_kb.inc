@@ -58,7 +58,7 @@ void nuphy_cycle_color_next(void) {
                                (current.h < 35) ? 1 : (current.h > 100 && current.h < 160) ? 2 : 0;
     }
     nuphy_selected_color = (nuphy_selected_color + 1) % ARRAY_SIZE(nuphy_cycle_colors);
-    rgb_matrix_mode(RGB_MATRIX_SOLID_COLOR);
+    // Update the stored color without changing the active lighting effect.
     hsv_t color = nuphy_cycle_colors[nuphy_selected_color];
     rgb_matrix_sethsv(color.h, color.s, color.v);
 }
@@ -89,8 +89,13 @@ static bool NUPHY_COLOR_CYCLE(effect_params_t *params) {
     uint8_t  color_index = (elapsed / segment_ms) % ARRAY_SIZE(nuphy_cycle_colors);
     uint8_t  next_index = (color_index + 1) % ARRAY_SIZE(nuphy_cycle_colors);
     uint8_t  blend = (elapsed % segment_ms) * 255 / segment_ms;
-    rgb_t    first = rgb_matrix_hsv_to_rgb(nuphy_cycle_colors[color_index]);
-    rgb_t    second = rgb_matrix_hsv_to_rgb(nuphy_cycle_colors[next_index]);
+    // Apply the shared Fn + Up/Down brightness while preserving palette values.
+    hsv_t    first_hsv = nuphy_cycle_colors[color_index];
+    hsv_t    second_hsv = nuphy_cycle_colors[next_index];
+    first_hsv.v = (uint16_t)first_hsv.v * rgb_matrix_get_val() / 255;
+    second_hsv.v = (uint16_t)second_hsv.v * rgb_matrix_get_val() / 255;
+    rgb_t    first = rgb_matrix_hsv_to_rgb(first_hsv);
+    rgb_t    second = rgb_matrix_hsv_to_rgb(second_hsv);
     rgb_t    rgb = {
         .r = (first.r * (255 - blend) + second.r * blend) / 255,
         .g = (first.g * (255 - blend) + second.g * blend) / 255,
