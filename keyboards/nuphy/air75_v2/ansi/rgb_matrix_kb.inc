@@ -43,11 +43,11 @@ void nuphy_rgb_note_keypress(uint8_t row, uint8_t col) {
 // Shared by the automatic color cycle and RGB_COL_NEXT (Fn + Right).
 // Keep these as HSV so solid color and the cycle render the same palette.
 hsv_t nuphy_cycle_colors[] = {
-    {68, 118, 149}, // Sage green backlight
-    {15, 255, 255}, // Orange
-    {128, 255, 255}, // Cyan
-    {0, 0, 255},     // White
-    {0, 255, 255},   // User-adjustable color
+    {68, 118, 149},
+    {15, 255, 255},
+    {128, 255, 255},
+    {0, 0, 255},
+    {0, 255, 255}
 };
 static uint8_t nuphy_selected_color = 0xff;
 
@@ -64,8 +64,8 @@ void nuphy_cycle_color_next(void) {
 }
 
 void nuphy_adjust_user_color(uint8_t component) {
-    hsv_t *color = &nuphy_cycle_colors[4];
-    nuphy_selected_color = 4;
+    hsv_t *color = &nuphy_cycle_colors[ARRAY_SIZE(nuphy_cycle_colors) - 1];
+    nuphy_selected_color = ARRAY_SIZE(nuphy_cycle_colors) - 1;
     if (component == 0) {
         color->h++;
     } else if (component == 1) {
@@ -73,7 +73,7 @@ void nuphy_adjust_user_color(uint8_t component) {
     } else {
         color->v++;
     }
-    if (nuphy_selected_color == 4 && rgb_matrix_get_mode() == RGB_MATRIX_SOLID_COLOR) {
+    if (nuphy_selected_color == ARRAY_SIZE(nuphy_cycle_colors) - 1 && rgb_matrix_get_mode() == RGB_MATRIX_SOLID_COLOR) {
         rgb_matrix_sethsv_noeeprom(color->h, color->s, color->v);
     }
 }

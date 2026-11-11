@@ -305,8 +305,8 @@ const uint8_t flow_rainbow_colour_tab[FLOW_COLOUR_TAB_LEN][3]=
 
 const uint8_t colour_lib[4][3] =
 {
-	{0x4f, 0x9e, 0x20},
-	{0xff, 0x5a, 0x00},
-	{0x00, 0xff, 0xff},
-	{0xff, 0xff, 0xff},
+    {79, 158, 32},
+    {255, 90, 0},
+    {0, 255, 255},
+    {255, 255, 255}
 };
