@@ -1,10 +1,47 @@
 # Air75 V2 upstream QMK migration — status and priorities
 
-**Status snapshot:** 2026-11-08  
+**Current status:** 2026-11-18
 **Repository:** [boylie101/Air75](https://github.com/boylie101/Air75)  
 **Scope:** NuPhy Air75 V2 only.
 
-This document records the current migration strategy, branch roles, known compatibility work, and the order in which work should proceed. Update it as findings are verified so it remains the hand-off point for future work.
+The source port and subsequent keymap/lighting work are present at `92bd10b82e`.
+Current A–D implementation and validation are recorded at the top of the
+[NKRO audit](AIR75_V2_NKRO_AUDIT.md). They are committed separately on
+`feature/nkro-rf-reliability`: bounded E2 buffer, transport-aware capability and
+recovery snapshots; C is resolved by the capability fix without a reset helper.
+The Linux slider policy is committed separately as `cfde361cd6`. Latest fetched
+master `eea6258af5` was integrated by genuine merge `4aebe6682f`, preserving
+upstream ancestry with zero upstream-only commits from that tip. Automated
+checks pass; user testing confirms seven-key RF rollover, held-key recovery in
+an E1 slot and no stale Space replay after its offline release. Held E2 recovery
+and the remaining hardware matrix are not yet verified. Nothing has been pushed.
+
+The following paragraphs record the earlier merge and Linux policy milestones.
+At the earlier alignment milestone, fetched official master was `8252b63097`;
+a genuine merge of all four
+upstream commits was prepared using `git merge --no-commit --no-ff upstream/master`
+and committed with explicit user approval as `9c8d758b1c`. It includes the USB
+buffer fix, all upstream keyboard changes and `Agents.md`, with no conflicts or
+Air75 firmware changes. `air75-v2-qmk` was fast-forwarded to that merge commit;
+upstream ancestry is verified and divergence is 58 project / zero upstream-only
+commits. This corrected the earlier selective integration. The NKRO audit,
+harness and other documentation changes were excluded from that merge commit.
+
+USB/default/custom/default_nuphy/VIA compile checks and host-side RF
+characterisation are recorded in the audit. The Linux policy change, first
+prepared on `feature/linux-slider-nkro`, enables NKRO in both slider positions for `custom`,
+while retaining configurable Mac six-key compatibility. On 2026-11-18 the user
+reported testing this change successfully. Detailed per-transport/edge-case
+results were not supplied. Subsequent A–D changes address the capability and
+sender recovery findings; high-usage overflow remains limited. VIA's explicit
+upstream lint check rejects its name by policy; keyboard and in-tree keymap lint
+pass.
+
+## Historical migration record (2026-11-08)
+
+The remainder records earlier branch positions, plans and verification. Statements
+such as "port not started" and the old upstream SHAs describe that earlier
+snapshot, not the current checkout. Use the audit linked above for current status.
 
 ## Objective
 

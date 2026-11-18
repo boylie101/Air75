@@ -1,5 +1,12 @@
 # Air75 V2 → upstream QMK compatibility audit
 
+**Historical audit:** the source port and later keymap/lighting work have since
+been implemented. The [2026-11-18 upstream and NKRO audit](AIR75_V2_NKRO_AUDIT.md)
+supersedes current-status statements below, including source blockers, branch
+positions and verification results. It also clarifies the RF format: six arbitrary
+usage slots plus a restricted overflow bitmap, with modifiers carried by the
+six-key report. The older RF summary is not a complete description of that format.
+
 **Audit date:** 2026-11-08  
 **Scope:** NuPhy Air75 V2 ANSI implementation, including default/custom/VIA keymaps, its RF/UART transport, side lighting, EEPROM settings, and keyboard-specific USB sleep handling.  
 **Repository:** [boylie101/Air75](https://github.com/boylie101/Air75)
