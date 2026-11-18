@@ -160,12 +160,18 @@ def build(directory, name, rf, analyze, connection=False, **kwargs):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--analyze', action='store_true')
-    parser.add_argument('--stage', choices=('encoder', 'transport', 'recovery', 'all'), default='all')
+    parser.add_argument('--stage', choices=('encoder', 'transport', 'recovery', 'receive', 'all'), default='all')
     args = parser.parse_args()
     rf = (KEYBOARD / 'rf.c').read_text()
     with tempfile.TemporaryDirectory(prefix='air75-rf-tests-') as temp:
         directory = Path(temp)
         current = build(directory, 'current', rf, args.analyze)
+        if args.stage in ('receive', 'all'):
+            for case in range(80, 89):
+                subprocess.run([str(current), str(case)], check=True)
+            print('PASS 9 receive checks: ACK/data separation, stale payloads, notifications, validation, request completion and reset recovery')
+            if args.stage == 'receive':
+                return
         count = 0
         for case in range(12):
             subprocess.run([str(current), str(case)], check=True, stdout=subprocess.DEVNULL)

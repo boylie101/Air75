@@ -117,6 +117,24 @@ static void status_frame(uint8_t link, uint8_t state_value, bool valid) {
 static void status(uint8_t state_value) {
     status_frame(dev_info.link_mode, state_value, true);
 }
+static void receive_raw(const uint8_t *packet, uint8_t size) {
+    memcpy(Usart_Mgr.RXDBuf, packet, size);
+    Usart_Mgr.RXDLen      = size;
+    Usart_Mgr.RXDState    = RX_Done;
+    Usart_Mgr.RXDOverTime = 9;
+    f_uart_ack            = false;
+    sync_lost             = 7;
+    RF_Protocol_Receive();
+    assert(Usart_Mgr.RXDLen == 0 && Usart_Mgr.RXDState == RX_Idle && Usart_Mgr.RXDOverTime == 0);
+}
+static void receive_packet(uint8_t command, const uint8_t *payload, uint8_t size, bool ack_only) {
+    uint8_t packet[UART_MAX_LEN] = {UART_HEAD, command, ack_only ? 0xa0 : 0, size};
+    assert(size <= UART_MAX_LEN - 5);
+    if (size) memcpy(packet + 4, payload, size);
+    for (uint8_t i = 0; i < size; ++i)
+        packet[4 + size] += packet[4 + i];
+    receive_raw(packet, ack_only ? 3 : size + 5);
+}
 static unsigned reports(uint8_t command) {
     unsigned count = 0;
     for (unsigned i = 0; i < frame_count; ++i)
@@ -592,6 +610,123 @@ int main(int argc, char **argv) {
             poll(4001, 51);
             assert(frame_count == 0);
             status_frame(LINK_BT_2, RF_CONNECT, true);
+            poll(4001, 51);
+            assert(frame_count == 0);
+            status(RF_CONNECT);
+            poll(4001, 1);
+            snapshot();
+            break;
+        case 80: { /* A status ACK cannot consume stale fields or count link mismatches. */
+            DEV_INFO_STRUCT expected = dev_info;
+            dev_info.rf_state        = RF_DISCONNECT;
+            dev_info.rf_battery      = 42;
+            expected                 = dev_info;
+            Usart_Mgr.RXDBuf[4]      = dev_info.link_mode;
+            Usart_Mgr.RXDBuf[5]      = RF_CONNECT;
+            Usart_Mgr.RXDBuf[6]      = 2;
+            Usart_Mgr.RXDBuf[7]      = 1;
+            Usart_Mgr.RXDBuf[8]      = 97;
+            receive_packet(CMD_RF_STS_SYSC, NULL, 0, true);
+            assert(f_uart_ack && sync_lost == 0 && !f_rf_sts_sysc_ok);
+            assert(memcmp(&dev_info, &expected, sizeof(expected)) == 0);
+            Usart_Mgr.RXDBuf[4] = LINK_BT_2;
+            for (unsigned i = 0; i < 8; ++i)
+                receive_packet(CMD_RF_STS_SYSC, NULL, 0, true);
+            assert(!f_send_channel && !f_rf_sts_sysc_ok);
+            break;
+        }
+        case 81: { /* A configuration ACK cannot copy bytes or select a stale profile. */
+            memset(func_tab, 0x5c, sizeof(func_tab));
+            Usart_Mgr.RXDBuf[8]      = LINK_BT_2;
+            Usart_Mgr.RXDBuf[9]      = LINK_BT_3;
+            Usart_Mgr.RXDBuf[10]     = LINK_BT_1;
+            DEV_INFO_STRUCT expected = dev_info;
+            receive_packet(CMD_READ_DATA, NULL, 0, true);
+            assert(f_uart_ack && sync_lost == 0 && !f_rf_read_data_ok);
+            assert(memcmp(&dev_info, &expected, sizeof(expected)) == 0);
+            for (unsigned i = 0; i < sizeof(func_tab); ++i)
+                assert(func_tab[i] == 0x5c);
+            break;
+        }
+        case 82:   /* Preserve payload-free handshake, pairing and suspend ACKs. */
+        case 83: { /* Preserve the same notifications in validated data frames. */
+            const uint8_t commands[] = {CMD_HAND, CMD_NEW_ADV, CMD_24G_SUSPEND, 0x99};
+            for (unsigned i = 0; i < sizeof(commands); ++i) {
+                f_rf_hand_ok = f_rf_new_adv_ok = f_goto_sleep = false;
+                receive_packet(commands[i], NULL, 0, test == 82);
+                assert(f_uart_ack && sync_lost == 0);
+                assert(f_rf_hand_ok == (commands[i] == CMD_HAND));
+                assert(f_rf_new_adv_ok == (commands[i] == CMD_NEW_ADV));
+                assert(f_goto_sleep == (commands[i] == CMD_24G_SUSPEND));
+                assert(!f_rf_sts_sysc_ok && !f_rf_read_data_ok);
+            }
+            break;
+        }
+        case 84: { /* Valid status and configuration payloads still update their state. */
+            uint8_t payload[FUNC_VALID_LEN] = {LINK_RF_24, RF_CONNECT, 2, 0, 83};
+            receive_packet(CMD_RF_STS_SYSC, payload, 5, false);
+            assert(f_uart_ack && sync_lost == 0 && f_rf_sts_sysc_ok);
+            assert(dev_info.rf_state == RF_CONNECT && dev_info.rf_led == 2 && dev_info.rf_battery == 83);
+            payload[4] = LINK_BT_2;
+            payload[5] = LINK_BT_3;
+            payload[6] = LINK_BT_1;
+            receive_packet(CMD_READ_DATA, payload, sizeof(payload), false);
+            assert(f_uart_ack && sync_lost == 0 && f_rf_read_data_ok);
+            assert(dev_info.link_mode == LINK_BT_2 && dev_info.rf_channel == LINK_BT_3 && dev_info.ble_channel == LINK_BT_1);
+            assert(memcmp(func_tab, payload, sizeof(payload)) == 0);
+            break;
+        }
+        case 85: { /* Invalid ACK markers and incomplete prefixes remain rejected. */
+            uint8_t packet[] = {UART_HEAD, CMD_HAND, 0, 0};
+            receive_raw(packet, 3);
+            assert(!f_uart_ack && sync_lost == 7 && !f_rf_hand_ok);
+            packet[2] = 0xa0;
+            receive_raw(packet, 2);
+            assert(!f_uart_ack && sync_lost == 7 && !f_rf_hand_ok);
+            receive_raw(packet, 4);
+            assert(!f_uart_ack && sync_lost == 7 && !f_rf_hand_ok);
+            packet[0] = 0;
+            receive_raw(packet, 3);
+            assert(!f_uart_ack && sync_lost == 7 && !f_rf_hand_ok);
+            break;
+        }
+        case 86: { /* ACK handling does not weaken payload length or checksum validation. */
+            uint8_t         payload[FUNC_VALID_LEN] = {0};
+            DEV_INFO_STRUCT expected                = dev_info;
+            receive_packet(CMD_RF_STS_SYSC, payload, 4, false);
+            assert(!f_uart_ack && sync_lost == 7 && !f_rf_sts_sysc_ok);
+            receive_packet(CMD_READ_DATA, payload, FUNC_VALID_LEN - 1, false);
+            assert(!f_uart_ack && sync_lost == 7 && !f_rf_read_data_ok);
+            status_frame(dev_info.link_mode, RF_DISCONNECT, false);
+            assert(!f_uart_ack && sync_lost == 7 && !f_rf_sts_sysc_ok);
+            assert(memcmp(&dev_info, &expected, sizeof(expected)) == 0);
+            break;
+        }
+        case 87: { /* An ACK cannot finish a data request; the following payload can. */
+            uint8_t payload[FUNC_VALID_LEN] = {LINK_RF_24, RF_CONNECT, 0, 0, 83};
+            receive_packet(CMD_RF_STS_SYSC, NULL, 0, true);
+            assert(!f_rf_sts_sysc_ok);
+            receive_packet(CMD_RF_STS_SYSC, payload, 5, false);
+            assert(f_rf_sts_sysc_ok && dev_info.rf_battery == 83);
+            receive_packet(CMD_READ_DATA, NULL, 0, true);
+            assert(!f_rf_read_data_ok);
+            payload[4] = LINK_RF_24;
+            receive_packet(CMD_READ_DATA, payload, sizeof(payload), false);
+            assert(f_rf_read_data_ok && dev_info.link_mode == LINK_RF_24);
+            break;
+        }
+        case 88: /* Reset recovery requires fresh status data, not a stale status ACK. */
+            ordinary_keys();
+            warm();
+            f_rf_reset = true;
+            now += 200;
+            dev_sts_sync();
+            dev_info.rf_state   = RF_DISCONNECT;
+            Usart_Mgr.RXDBuf[4] = LINK_RF_24;
+            Usart_Mgr.RXDBuf[5] = RF_CONNECT;
+            frame_count         = 0;
+            receive_packet(CMD_RF_STS_SYSC, NULL, 0, true);
+            assert(!f_rf_sts_sysc_ok && dev_info.rf_state == RF_DISCONNECT);
             poll(4001, 51);
             assert(frame_count == 0);
             status(RF_CONNECT);

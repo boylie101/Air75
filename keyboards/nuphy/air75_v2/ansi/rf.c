@@ -287,6 +287,11 @@ void RF_Protocol_Receive(void) {
     f_uart_ack = 1;
     sync_lost = 0;
 
+    /* Status/configuration ACKs acknowledge receipt but contain no data. */
+    if (Usart_Mgr.RXDLen == 3 && (RX_CMD == CMD_RF_STS_SYSC || RX_CMD == CMD_READ_DATA)) {
+        goto frame_done;
+    }
+
     switch (RX_CMD) {
         case CMD_HAND: {
             f_rf_hand_ok = 1;
@@ -368,6 +373,7 @@ void RF_Protocol_Receive(void) {
         }
     }
 
+frame_done:
     Usart_Mgr.RXDLen = 0;
     Usart_Mgr.RXDState = RX_Idle;
     Usart_Mgr.RXDOverTime = 0;
