@@ -19,6 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "usb_main.h"
 #include "rf_driver.h"
 
+#ifndef AIR75_MAC_MODE_NKRO
+#    define AIR75_MAC_MODE_NKRO false
+#endif
+
 void nuphy_rgb_note_keypress(uint8_t row, uint8_t col);
 void nuphy_cycle_color_next(void);
 void nuphy_adjust_user_color(uint8_t component);
@@ -182,7 +186,7 @@ void long_press_key(void) {
 
             if (dev_info.sys_sw_state == SYS_SW_MAC) {
                 default_layer_set(1 << 0);
-                keymap_config.nkro = 0;
+                keymap_config.nkro = AIR75_MAC_MODE_NKRO;
             } else {
                 default_layer_set(1 << 2);
                 keymap_config.nkro = 1;
@@ -323,7 +327,7 @@ void dial_sw_scan(void) {
             f_sys_show = 1;
             default_layer_set(1 << 0);
             dev_info.sys_sw_state = SYS_SW_MAC;
-            keymap_config.nkro    = 0;
+            keymap_config.nkro    = AIR75_MAC_MODE_NKRO;
             break_all_key();
         }
     } else {
@@ -397,7 +401,7 @@ void dial_sw_fast_scan(void) {
         if (dev_info.sys_sw_state != SYS_SW_MAC) {
             default_layer_set(1 << 0);
             dev_info.sys_sw_state = SYS_SW_MAC;
-            keymap_config.nkro    = 0;
+            keymap_config.nkro    = AIR75_MAC_MODE_NKRO;
             break_all_key();
         }
     } else {

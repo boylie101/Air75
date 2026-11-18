@@ -17,6 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+// The Mac slider selects Linux in this keymap; use the Windows NKRO policy.
+#define AIR75_MAC_MODE_NKRO true
+
 // Keep only solid color and the two keyboard-specific effects in RM_NEXT.
 #undef ENABLE_RGB_MATRIX_GRADIENT_UP_DOWN
 #undef ENABLE_RGB_MATRIX_GRADIENT_LEFT_RIGHT
