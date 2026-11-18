@@ -49,7 +49,7 @@ extern DEV_INFO_STRUCT dev_info;
 extern report_keyboard_t *keyboard_report;
 extern report_nkro_t *nkro_report;
 extern bool f_uart_ack, f_rf_read_data_ok, f_rf_sts_sysc_ok, f_rf_new_adv_ok;
-extern bool f_rf_reset, f_rf_hand_ok, f_goto_sleep, f_send_channel, f_dial_sw_init_ok;
+extern bool f_rf_reset, f_rf_hand_ok, f_goto_sleep, f_send_channel, f_dial_sw_init_ok, f_wakeup_prepare;
 extern uint8_t host_mode, rf_blink_cnt;
 extern uint16_t rf_link_show_time, rf_linking_time, no_act_time;
 extern host_driver_t rf_host_driver, *m_host_driver;
@@ -121,13 +121,13 @@ def sources(rf, baseline=False, no_override=False):
     native = '#include "fixture.h"\n'
     native += '\n'.join(re.findall(r'^#define RX_\w+\s+.*$', rf, re.M)) + '\nUSART_MGR_STRUCT Usart_Mgr;\n'
     native += '\n'.join(re.findall(r'^(?:static )?(?:uint8_t|uint16_t|uint32_t|bool)\s+\w+(?:\[[^\]]+\])?\s*(?:=[^;]+)?;', rf, re.M)) + '\n'
+    native += function(rf, 'rf_keyboard_state_active', optional=True)
     native += ''.join(
         function(rf, n) for n in (
             'uart_auto_nkro_send', 'uart_send_report_func', 'uart_send_report_keyboard', 'uart_send_report_nkro', 'uart_send_consumer_report', 'uart_send_system_report', 'uart_send_mouse_report', 'get_checksum', 'UART_Send_Bytes', 'uart_send_report',
             'RF_Protocol_Receive', 'uart_send_cmd', 'dev_sts_sync'
         )
     )
-    native += function(rf, 'rf_keyboard_state_active', optional=True)
     driver_source = (KEYBOARD / 'rf_driver.c').read_text()
     native += 'static uint8_t rf_keyboard_leds(void);\nstatic void rf_send_keyboard(report_keyboard_t *report);\nstatic void rf_send_nkro(report_nkro_t *report);\nstatic void rf_send_mouse(report_mouse_t *report);\nstatic void rf_send_extra(report_extra_t *report);\n'
     native += re.search(r'^host_driver_t\s+rf_host_driver\s*=.*?;', driver_source, re.M | re.S)[0] + '\n'
@@ -190,6 +190,10 @@ def main():
                 subprocess.run([str(current), str(case)], check=True)
             subprocess.run([str(default), '40'], check=True)
             print('PASS 4 state-clearing checks: conditional failure reproduced without RF override, absent with override; normal switching and mode toggle clear correctly')
+            if args.stage in ('recovery', 'all'):
+                for case in range(60, 76):
+                    subprocess.run([str(current), str(case)], check=True)
+                print('PASS 16 recovery checks: long holds, offline releases, reconnects, module/status resets, missed snapshots, six-key mode, sleep and channel clearing')
 
 
 if __name__ == '__main__':

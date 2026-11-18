@@ -7,6 +7,7 @@ bool                 debug_keyboard;
 DEV_INFO_STRUCT      dev_info = {.link_mode = LINK_RF_24, .rf_state = RF_CONNECT};
 bool                 f_uart_ack, f_rf_read_data_ok, f_rf_sts_sysc_ok, f_rf_new_adv_ok;
 bool                 f_rf_reset, f_rf_hand_ok, f_goto_sleep, f_send_channel, f_dial_sw_init_ok = true;
+bool                 f_wakeup_prepare;
 uint8_t              host_mode = HOST_RF_TYPE, rf_blink_cnt;
 uint16_t             rf_link_show_time, rf_linking_time, no_act_time;
 test_keymap_config_t keymap_config = {true};
@@ -92,6 +93,43 @@ static void up(uint8_t key) {
 static void ordinary_keys(void) {
     for (uint8_t key = 4; key <= 10; ++key)
         down(key);
+}
+static void poll(uint16_t inactivity, uint32_t elapsed) {
+    no_act_time = inactivity;
+    now += elapsed;
+    uart_send_report_func();
+}
+static void warm(void) {
+    for (unsigned i = 0; i < 3; ++i)
+        poll(0, 51);
+    frame_count = 0;
+}
+static void status_frame(uint8_t link, uint8_t state_value, bool valid) {
+    uint8_t packet[] = {UART_HEAD, CMD_RF_STS_SYSC, 0, 5, link, state_value, 0, 0, 80, 0};
+    for (unsigned i = 4; i < 9; ++i)
+        packet[9] += packet[i];
+    if (!valid) packet[9] ^= 0xff;
+    memcpy(Usart_Mgr.RXDBuf, packet, sizeof(packet));
+    Usart_Mgr.RXDLen   = sizeof(packet);
+    Usart_Mgr.RXDState = RX_Done;
+    RF_Protocol_Receive();
+}
+static void status(uint8_t state_value) {
+    status_frame(dev_info.link_mode, state_value, true);
+}
+static unsigned reports(uint8_t command) {
+    unsigned count = 0;
+    for (unsigned i = 0; i < frame_count; ++i)
+        if (frames[i].bytes[1] == command) ++count;
+    return count;
+}
+static void snapshot(void) {
+    assert(reports(CMD_RPT_BYTE_KB) == 3 && reports(CMD_RPT_BIT_KB) == 3);
+    for (unsigned i = 0; i < frame_count; ++i) {
+        uint8_t *p = frames[i].bytes;
+        if (p[1] == CMD_RPT_BYTE_KB) assert(p[3] == 8 && memcmp(p + 4, bytekb_report_buf, 8) == 0);
+        if (p[1] == CMD_RPT_BIT_KB) assert(p[3] == 16 && p[4] == 0 && memcmp(p + 4, uart_bit_report_buf, 16) == 0);
+    }
 }
 static void dump_frames(void) {
     for (unsigned i = 0; i < frame_count; ++i) {
@@ -359,6 +397,206 @@ int main(int argc, char **argv) {
             assert(encoded(10));
             clear_keyboard();
             assert(!encoded(10));
+            break;
+        case 60: /* Long-held modifiers and overflow outlive the recent-activity window. */
+            ordinary_keys();
+            add_mods(0x22);
+            send_keyboard_report();
+            warm();
+            poll(4001, 51);
+            snapshot();
+            assert(encoded(10) && bytekb_report_buf[0] == 0x22);
+            break;
+        case 61: /* All releases occur offline; reconnect after the refresh window. */
+            ordinary_keys();
+            warm();
+            status(RF_DISCONNECT);
+            poll(4001, 1);
+            clear_keyboard();
+            poll(4001, 30000);
+            frame_count = 0;
+            status(RF_CONNECT);
+            poll(4002, 1);
+            snapshot();
+            assert(!encoded(10));
+            for (unsigned i = 0; i < 8; ++i)
+                assert(bytekb_report_buf[i] == 0);
+            break;
+        case 62:
+            ordinary_keys();
+            warm();
+            status(RF_DISCONNECT);
+            poll(4001, 51);
+            status(RF_CONNECT);
+            frame_count = 0;
+            poll(5000, 1);
+            snapshot();
+            assert(encoded(10));
+            break;
+        case 63: /* An idle all-up keyboard still explicitly clears a recovered module. */
+            status(RF_DISCONNECT);
+            poll(5000, 51);
+            status(RF_CONNECT);
+            poll(5000, 1);
+            snapshot();
+            for (unsigned i = 0; i < sizeof(uart_bit_report_buf); ++i)
+                assert(uart_bit_report_buf[i] == 0);
+            break;
+        case 64: /* Disconnect and reconnect status can arrive between housekeeping polls. */
+            ordinary_keys();
+            warm();
+            status(RF_DISCONNECT);
+            status(RF_CONNECT);
+            poll(4001, 1);
+            snapshot();
+            break;
+        case 65: /* Local module reset must wait for a fresh matching status payload. */
+            status(RF_CONNECT);
+            ordinary_keys();
+            warm();
+            f_rf_reset = true;
+            now += 200;
+            dev_sts_sync();
+            frame_count = 0;
+            poll(4001, 51);
+            assert(frame_count == 0);
+            Usart_Mgr.RXDBuf[0] = UART_HEAD;
+            Usart_Mgr.RXDBuf[1] = CMD_RF_STS_SYSC;
+            Usart_Mgr.RXDBuf[2] = 0xa0;
+            Usart_Mgr.RXDLen    = 3;
+            Usart_Mgr.RXDState  = RX_Done;
+            RF_Protocol_Receive();
+            poll(4001, 51);
+            assert(frame_count == 0);
+            status(RF_CONNECT);
+            poll(4001, 1);
+            snapshot();
+            assert(encoded(10));
+            break;
+        case 66: /* Sender emits held-state snapshots; downstream forwarding is not modelled. */
+            ordinary_keys();
+            warm();
+            poll(4001, 51);
+            snapshot();
+            frame_count = 0;
+            poll(5001, 51);
+            snapshot();
+            break;
+        case 67: /* Idle recovery is bounded; it does not keep all-up traffic alive forever. */
+            for (unsigned i = 0; i < 3; ++i)
+                poll(4001, 51);
+            assert(reports(CMD_RPT_BYTE_KB) == 9 && reports(CMD_RPT_BIT_KB) == 9);
+            frame_count = 0;
+            poll(4001, 51);
+            assert(frame_count == 0);
+            break;
+        case 68: /* Preserve sleep; resume can replay current state. */
+            ordinary_keys();
+            warm();
+            f_goto_sleep = true;
+            poll(0, 51);
+            assert(frame_count == 0);
+            f_goto_sleep     = false;
+            f_wakeup_prepare = true;
+            poll(0, 51);
+            assert(frame_count == 0);
+            f_wakeup_prepare = false;
+            poll(4001, 1);
+            snapshot();
+            break;
+        case 69:
+            status(RF_DISCONNECT);
+            ordinary_keys();
+            frame_count = 0;
+            poll(0, 51);
+            assert(frame_count == 0);
+            status(RF_CONNECT);
+            poll(0, 1);
+            snapshot();
+            assert(encoded(10));
+            break;
+        case 70:
+            keymap_config.nkro = false;
+            down(4);
+            add_mods(0x81);
+            send_keyboard_report();
+            warm();
+            status(RF_DISCONNECT);
+            poll(4001, 51);
+            up(4);
+            clear_mods();
+            send_keyboard_report();
+            status(RF_CONNECT);
+            frame_count = 0;
+            poll(5001, 1);
+            snapshot();
+            for (unsigned i = 0; i < 8; ++i)
+                assert(bytekb_report_buf[i] == 0);
+            break;
+        case 71:
+            keymap_config.nkro = false;
+            down(4);
+            warm();
+            poll(4001, 51);
+            assert(reports(CMD_RPT_BYTE_KB) == 3 && bytekb_report_buf[2] == 4);
+            break;
+        case 72: {
+            ordinary_keys();
+            warm();
+            status(RF_DISCONNECT);
+            poll(4001, 1);
+            up(4);
+            up(5);
+            up(10);
+            down(11);
+            add_mods(0x22);
+            send_keyboard_report();
+            uint8_t expected[8];
+            memcpy(expected, bytekb_report_buf, 8);
+            status(RF_CONNECT);
+            frame_count = 0;
+            poll(5000, 1);
+            snapshot();
+            assert(memcmp(expected, bytekb_report_buf, 8) == 0 && !encoded(4) && !encoded(5) && !encoded(10) && encoded(11));
+            break;
+        }
+        case 73: /* Simulate dropping every immediate all-up copy; refresh sends the release. */
+            ordinary_keys();
+            warm();
+            clear_keyboard();
+            frame_count = 0;
+            poll(0, 51);
+            snapshot();
+            assert(!encoded(10));
+            break;
+        case 74:
+            ordinary_keys();
+            warm();
+            switch_dev_link(LINK_BT_1);
+            status(RF_CONNECT);
+            frame_count = 0;
+            poll(4001, 1);
+            snapshot();
+            assert(!encoded(10));
+            for (unsigned i = 0; i < 8; ++i)
+                assert(bytekb_report_buf[i] == 0);
+            break;
+        case 75:
+            ordinary_keys();
+            warm();
+            f_rf_reset = true;
+            now += 200;
+            dev_sts_sync();
+            frame_count = 0;
+            status_frame(dev_info.link_mode, RF_CONNECT, false);
+            poll(4001, 51);
+            assert(frame_count == 0);
+            status_frame(LINK_BT_2, RF_CONNECT, true);
+            poll(4001, 51);
+            assert(frame_count == 0);
+            status(RF_CONNECT);
+            poll(4001, 1);
+            snapshot();
             break;
         default:
             assert(false);

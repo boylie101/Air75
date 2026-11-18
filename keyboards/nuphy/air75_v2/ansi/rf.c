@@ -33,6 +33,7 @@ extern bool f_rf_new_adv_ok;
 extern bool f_rf_reset;
 extern bool f_rf_hand_ok;
 extern bool f_goto_sleep;
+extern bool f_wakeup_prepare;
 
 /* E2 carries a zero prefix and 15 bitmap bytes; higher usages need an E1 slot. */
 static uint8_t uart_bit_report_buf[16] = {0};
@@ -42,6 +43,11 @@ uint8_t  bytekb_report_buf[8]    = {0};
 uint8_t  sync_lost               = 0;
 uint8_t  disconnect_delay        = 0;
 bool     uart_repeat_flag        = 0;
+
+static bool    rf_report_connected   = false;
+static bool    rf_report_wait_status = false;
+static uint8_t rf_report_link_mode   = LINK_USB;
+static uint8_t rf_report_replays     = 0;
 
 extern DEV_INFO_STRUCT dev_info;
 extern host_driver_t  *m_host_driver;
@@ -123,30 +129,56 @@ static void uart_auto_nkro_send(uint8_t *pre_bit_report, uint8_t *now_bit_report
     }
 }
 
+static bool rf_keyboard_state_active(void) {
+    for (uint8_t i = 0; i < sizeof(bytekb_report_buf); i++) {
+        if (bytekb_report_buf[i]) {
+            return true;
+        }
+    }
+    for (uint8_t i = 1; i < sizeof(uart_bit_report_buf); i++) {
+        if (uart_bit_report_buf[i]) {
+            return true;
+        }
+    }
+    return false;
+}
 
 /**
- * @brief  Send a keyboard report over UART.
+ * @brief Refresh held state and replay current snapshots after radio recovery.
  */
-void uart_send_report_func(void)
-{
+void uart_send_report_func(void) {
     static uint32_t interval_timer = 0;
 
-    if (dev_info.link_mode == LINK_USB) {
+    if (dev_info.link_mode == LINK_USB || !f_dial_sw_init_ok || dev_info.rf_state != RF_CONNECT || rf_report_wait_status || f_goto_sleep || f_wakeup_prepare) {
+        rf_report_connected = false;
         return;
     }
 
-    if (timer_elapsed32(interval_timer) > 50) {
-        interval_timer = timer_read32();
-        if (no_act_time <= 2000) {
-            uart_send_report(CMD_RPT_BYTE_KB, bytekb_report_buf, 8);
-            wait_us(200);
+    bool recovered = !rf_report_connected || rf_report_link_mode != dev_info.link_mode;
+    if (recovered) {
+        rf_report_connected = true;
+        rf_report_link_mode = dev_info.link_mode;
+        /* Three snapshot rounds, each using the existing UART triple-send. */
+        rf_report_replays = 3;
+    }
 
-            if (f_bit_kb_act) {
-                uart_send_report(CMD_RPT_BIT_KB, uart_bit_report_buf, sizeof(uart_bit_report_buf));
-            }
-        } else {
-            f_bit_kb_act = 0;
+    if (!recovered && timer_elapsed32(interval_timer) <= 50) {
+        return;
+    }
+    interval_timer = timer_read32();
+
+    if (rf_report_replays || no_act_time <= 2000 || rf_keyboard_state_active()) {
+        uart_send_report(CMD_RPT_BYTE_KB, bytekb_report_buf, sizeof(bytekb_report_buf));
+        wait_us(200);
+
+        if (rf_report_replays || f_bit_kb_act) {
+            uart_send_report(CMD_RPT_BIT_KB, uart_bit_report_buf, sizeof(uart_bit_report_buf));
         }
+        if (rf_report_replays) {
+            rf_report_replays--;
+        }
+    } else {
+        f_bit_kb_act = 0;
     }
 }
 
@@ -278,6 +310,13 @@ void RF_Protocol_Receive(void) {
                 error_cnt = 0;
 
                 dev_info.rf_state = Usart_Mgr.RXDBuf[5];
+                /* Only a validated data payload can complete reset recovery. */
+                if (Usart_Mgr.RXDLen > 4) {
+                    rf_report_wait_status = false;
+                }
+                if (dev_info.rf_state != RF_CONNECT) {
+                    rf_report_connected = false;
+                }
 
                 if ((dev_info.rf_state == RF_CONNECT) &&
                     ((Usart_Mgr.RXDBuf[6] & 0xf8) == 0)) {
@@ -517,6 +556,8 @@ void dev_sts_sync(void) {
 
     if (f_rf_reset) {
         f_rf_reset = 0;
+        rf_report_wait_status = true;
+        rf_report_connected   = false;
         wait_ms(100);
         gpio_write_pin_low(NRF_RESET_PIN);
         wait_ms(50);
