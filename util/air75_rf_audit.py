@@ -186,6 +186,10 @@ def main():
             for case in range(29, 33):
                 subprocess.run([str(connected), str(case)], check=True)
             print('PASS 21 transport checks: USB/RF x BOOT/REPORT x six-key/NKRO, default weak hook, switching, built-in Bluetooth/NONE')
+            for case in (40, 41, 42):
+                subprocess.run([str(current), str(case)], check=True)
+            subprocess.run([str(default), '40'], check=True)
+            print('PASS 4 state-clearing checks: conditional failure reproduced without RF override, absent with override; normal switching and mode toggle clear correctly')
 
 
 if __name__ == '__main__':

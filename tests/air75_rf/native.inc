@@ -317,6 +317,49 @@ int main(int argc, char **argv) {
             host_set_driver(&usb_driver);
             assert(!host_can_send_nkro());
             break;
+        case 40: /* Exact conditional sequence, with actual QMK report/clear paths. */
+            ordinary_keys();
+            assert(encoded(10));
+            protocol = USB_PROTOCOL_BOOT;
+            up(10);
+            down(10);
+            protocol = USB_PROTOCOL_REPORT;
+            break_all_key();
+            assert((uart_bit_report_buf[2] & 4) == (NO_DRIVER_OVERRIDE ? 4 : 0));
+            frame_count = 0;
+            now         = 51;
+            uart_send_report_func();
+            for (unsigned i = 0; i < frame_count; ++i) {
+                if (frames[i].bytes[1] == CMD_RPT_BIT_KB) assert((frames[i].bytes[6] & 4) == (NO_DRIVER_OVERRIDE ? 4 : 0));
+            }
+            break;
+        case 41: /* Ordinary transport switching remains a clear, not a held-state replay. */
+            ordinary_keys();
+            add_mods(0x22);
+            send_keyboard_report();
+            switch_dev_link(LINK_USB);
+            switch_dev_link(LINK_RF_24);
+            dev_info.rf_state = RF_CONNECT;
+            now               = 51;
+            uart_send_report_func();
+            for (unsigned i = 0; i < sizeof(uart_bit_report_buf); ++i)
+                assert(uart_bit_report_buf[i] == 0);
+            for (unsigned i = 0; i < sizeof(bytekb_report_buf); ++i)
+                assert(bytekb_report_buf[i] == 0);
+            break;
+        case 42: /* Supported NKRO toggle sequence clears before changing mode. */
+            ordinary_keys();
+            clear_keyboard();
+            keymap_config.nkro = false;
+            ordinary_keys();
+            assert(!encoded(10));
+            clear_keyboard();
+            keymap_config.nkro = true;
+            ordinary_keys();
+            assert(encoded(10));
+            clear_keyboard();
+            assert(!encoded(10));
+            break;
         default:
             assert(false);
     }
