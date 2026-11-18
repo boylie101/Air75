@@ -5,8 +5,8 @@
 **Scope:** NuPhy Air75 V2 only.
 
 The source port and subsequent keymap/lighting work are present at `92bd10b82e`.
-Current A–D implementation and validation are recorded at the top of the
-[NKRO audit](AIR75_V2_NKRO_AUDIT.md). They are committed separately on
+Current A–D implementation and validation are recorded in the per-commit notes
+linked from the [NKRO change index](AIR75_V2_NKRO_AUDIT.md). They are committed separately on
 `feature/nkro-rf-reliability`: bounded E2 buffer, transport-aware capability and
 recovery snapshots; C is resolved by the capability fix without a reset helper.
 The Linux slider policy is committed separately as `cfde361cd6`. Latest fetched
@@ -14,7 +14,10 @@ master `eea6258af5` was integrated by genuine merge `4aebe6682f`, preserving
 upstream ancestry with zero upstream-only commits from that tip. Automated
 checks pass; user testing confirms seven-key RF rollover, held-key recovery in
 an E1 slot and no stale Space replay after its offline release. Held E2 recovery
-and the remaining hardware matrix are not yet verified. Nothing has been pushed.
+and the remaining detailed hardware matrix are not established by those captures.
+The subsequent ACK-only fix is documented as `d523003c9f`; the user reports
+flashing and fully testing that candidate successfully. Individual post-fix
+results and new captures were not supplied.
 
 The following paragraphs record the earlier merge and Linux policy milestones.
 At the earlier alignment milestone, fetched official master was `8252b63097`;

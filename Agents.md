@@ -190,7 +190,19 @@ Document significant:
 
 Documentation must be **concise, clear and human-readable**.
 
-Prefer updating existing documentation over creating unnecessary new files. Explain what someone maintaining the project needs to know, without lengthy commentary or documenting every minor code change.
+For each substantive project-specific change commit, keep a separate, concise
+note in `docs/changes/`, prepared alongside that commit. Use a stable filename
+such as `YYYY-MM-DD-short-description.md` so the note can be included in the
+commit it documents. Explain the problem, resulting behaviour, validation and
+remaining limitations. Identify the commit in the index once its hash is known;
+do not amend or rewrite existing history just to add a hash to its own note.
+
+Keep overview documents as short indexes linking to these notes and shared
+technical references. Do not append successive commit reports to one growing
+audit document. Mark archived investigations as historical and leave them frozen.
+Update the existing note for the same pending change rather than creating
+duplicate reports. Other documentation should explain what a maintainer needs
+without lengthy commentary or documenting every minor code change.
 
 ## 8. Git and branch management
 
