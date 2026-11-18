@@ -1,4 +1,4 @@
-# Air75 V2 NKRO change index
+# Air75 V2 firmware change index
 
 Implementation, validation and remaining limits are recorded separately for each
 change commit. New work gets its own note; this page stays a short index.
@@ -14,6 +14,7 @@ change commit. New work gets its own note; this page stays a short index.
 | `6fc5e6db60` | [D — RF recovery, validation and hardware results](changes/2026-11-18-rf-recovery.md). |
 | `d523003c9f` | [ACK-only dispatch hardening](changes/2026-11-18-rf-ack-only-dispatch.md). |
 | With this index | [Per-commit documentation organisation](changes/2026-11-18-per-commit-documentation.md). |
+| `21f8d8210b` | [EEPROM settings validation](changes/2026-11-18-eeprom-settings-validation.md). |
 
 [Architecture reference](AIR75_V2_NKRO_ARCHITECTURE.md) explains the USB, RF and
 Bluetooth paths and preserved E1/E2 format. The radio/dongle implementation is
