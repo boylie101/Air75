@@ -166,3 +166,6 @@ typedef struct
     uint8_t sleep_enable;
     uint8_t retain1;
 } keyboard_config_t;
+
+/* Repair invalid side-light settings; return true when a field was changed. */
+bool side_config_sanitize(keyboard_config_t *config);

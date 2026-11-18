@@ -86,6 +86,33 @@ extern bool            f_sleep_show;
 void side_ws2812_setleds(rgb_led_t *ledarray, uint16_t leds);
 void rgb_matrix_update_pwm_buffers(void);
 
+bool side_config_sanitize(keyboard_config_t *config) {
+    bool changed = false;
+
+    /* Match the existing first-boot/factory-reset defaults. */
+    if (config->ee_side_mode >= ARRAY_SIZE(side_speed_table)) {
+        config->ee_side_mode = SIDE_STATIC;
+        changed              = true;
+    }
+    if (config->ee_side_light >= ARRAY_SIZE(side_light_table)) {
+        config->ee_side_light = 4;
+        changed               = true;
+    }
+    if (config->ee_side_speed >= ARRAY_SIZE(side_speed_table[0])) {
+        config->ee_side_speed = 2;
+        changed               = true;
+    }
+    if (config->ee_side_rgb > 1) {
+        config->ee_side_rgb = 1;
+        changed             = true;
+    }
+    if (config->ee_side_colour >= ARRAY_SIZE(colour_lib)) {
+        config->ee_side_colour = 0;
+        changed                = true;
+    }
+    return changed;
+}
+
 /**
  * @brief  Set the color of a side LED.
  * @param  index Index in the side LED array.

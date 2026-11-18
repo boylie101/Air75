@@ -469,6 +469,14 @@ void loading_eeprom_data(void) {
         keyboard_config.sleep_enable            = true;
         eeconfig_update_kb_datablock(&keyboard_config, 0, sizeof(keyboard_config));
     } else {
+        bool repaired = side_config_sanitize(&keyboard_config);
+        if (keyboard_config.sleep_enable > 1) {
+            keyboard_config.sleep_enable = true;
+            repaired                     = true;
+        }
+        if (repaired) {
+            eeconfig_update_kb_datablock(&keyboard_config, 0, sizeof(keyboard_config));
+        }
         side_mode   = keyboard_config.ee_side_mode;
         side_light  = keyboard_config.ee_side_light;
         side_speed  = keyboard_config.ee_side_speed;
