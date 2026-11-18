@@ -135,17 +135,19 @@ def sources(rf, baseline=False, no_override=False):
     if not no_override:
         native += function(driver_source, 'host_can_send_nkro_for_driver', optional=True)
     native += ''.join(function((KEYBOARD / 'ansi.c').read_text(), n) for n in ('break_all_key', 'switch_dev_link'))
-    native += f'\n#define BASELINE_ENCODER {int(baseline)}\n'
+    native += f'\n#define BASELINE_ENCODER {int(baseline)}\n#define NO_DRIVER_OVERRIDE {int(no_override)}\n'
     native += (ROOT / 'tests/air75_rf/native.inc').read_text()
     return header, core, native
 
 
-def build(directory, name, rf, analyze, **kwargs):
+def build(directory, name, rf, analyze, connection=False, **kwargs):
     path = directory / name
     path.mkdir()
     for filename, source in zip(('fixture.h', 'core.c', 'native.c'), sources(rf, **kwargs)):
         (path / filename).write_text(source)
     flags = ['-std=c11', '-Wall', '-Wextra', '-Werror', '-g']
+    if connection:
+        flags += ['-DCONNECTION_ENABLE', '-DBLUETOOTH_ENABLE']
     compiler = os.environ.get('CC', 'clang')
     if analyze:
         for filename in ('core.c', 'native.c'):
@@ -174,6 +176,16 @@ def main():
             assert subprocess.check_output([str(current), str(case)]) == subprocess.check_output([str(old), str(case)]), case
             count += 1
         print(f'PASS {count} encoder checks (12 current cases; 10 byte-for-byte comparisons with pre-hardening encoder)')
+        if args.stage != 'encoder':
+            default = build(directory, 'default-hook', rf, args.analyze, no_override=True)
+            connected = build(directory, 'connection', rf, args.analyze, connection=True)
+            for binary in (current, default):
+                for case in range(20, 28):
+                    subprocess.run([str(binary), str(case)], check=True)
+            subprocess.run([str(current), '28'], check=True)
+            for case in range(29, 33):
+                subprocess.run([str(connected), str(case)], check=True)
+            print('PASS 21 transport checks: USB/RF x BOOT/REPORT x six-key/NKRO, default weak hook, switching, built-in Bluetooth/NONE')
 
 
 if __name__ == '__main__':

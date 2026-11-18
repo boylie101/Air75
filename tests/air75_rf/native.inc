@@ -81,6 +81,18 @@ static void six(void) {
         bit(key, true);
     state();
 }
+static void down(uint8_t key) {
+    add_key_to_report(key);
+    send_keyboard_report();
+}
+static void up(uint8_t key) {
+    del_key_from_report(key);
+    send_keyboard_report();
+}
+static void ordinary_keys(void) {
+    for (uint8_t key = 4; key <= 10; ++key)
+        down(key);
+}
 static void dump_frames(void) {
     for (unsigned i = 0; i < frame_count; ++i) {
         const uint8_t *p = frames[i].bytes;
@@ -229,6 +241,82 @@ int main(int argc, char **argv) {
             dump_frames();
             break;
         }
+        case 20:
+        case 21:
+        case 22:
+        case 23:
+        case 24:
+        case 25:
+        case 26:
+        case 27: {
+            unsigned mode      = test - 20;
+            bool     radio     = mode & 4;
+            protocol           = (mode & 2) ? USB_PROTOCOL_REPORT : USB_PROTOCOL_BOOT;
+            keymap_config.nkro = mode & 1;
+            host_set_driver(radio ? &rf_host_driver : &usb_driver);
+            bool capability = (radio && !NO_DRIVER_OVERRIDE) || protocol == USB_PROTOCOL_REPORT;
+            assert(host_can_send_nkro() == capability);
+            bool nkro = capability && keymap_config.nkro;
+            ordinary_keys();
+            up(10);
+            down(10);
+            add_mods(0x22);
+            send_keyboard_report();
+            assert((nkro ? nkro_report->mods : keyboard_report->mods) == 0x22);
+            assert((nkro_report->bits[1] & 4) == (nkro ? 4 : 0));
+            if (radio) {
+                assert(encoded(10) == nkro);
+                assert(bytekb_report_buf[0] == 0x22 && uart_bit_report_buf[0] == 0);
+                assert(usb_byte_count == 0 && usb_bit_count == 0);
+            } else {
+                assert(frame_count == 0);
+                assert(nkro ? usb_bit_count > 0 && usb_byte_count == 0 : usb_byte_count > 0 && usb_bit_count == 0);
+            }
+            clear_keyboard();
+            assert((nkro ? nkro_report->mods : keyboard_report->mods) == 0);
+            if (radio)
+                for (unsigned i = 0; i < sizeof(uart_bit_report_buf); ++i)
+                    assert(uart_bit_report_buf[i] == 0);
+            break;
+        }
+        case 28:
+            ordinary_keys();
+            assert(encoded(10));
+            switch_dev_link(LINK_USB);
+            assert(host_get_driver() == &usb_driver && !encoded(10));
+            protocol = USB_PROTOCOL_BOOT;
+            assert(!host_can_send_nkro());
+            ordinary_keys();
+            switch_dev_link(LINK_RF_24);
+            dev_info.rf_state = RF_CONNECT;
+            assert(host_get_driver() == &rf_host_driver && host_can_send_nkro());
+            ordinary_keys();
+            assert(encoded(10));
+            clear_keyboard();
+            assert(!encoded(10));
+            break;
+        case 29:
+        case 30:
+            test_active_host(CONNECTION_HOST_BLUETOOTH);
+            bt_nkro  = test == 30;
+            protocol = USB_PROTOCOL_BOOT;
+            assert(host_can_send_nkro() == bt_nkro);
+            protocol = USB_PROTOCOL_REPORT;
+            assert(host_can_send_nkro() == bt_nkro);
+            break;
+        case 31:
+            test_active_host(CONNECTION_HOST_NONE);
+            assert(!host_can_send_nkro());
+            ordinary_keys();
+            assert(frame_count == 0);
+            break;
+        case 32:
+            test_active_host(CONNECTION_HOST_USB);
+            protocol = USB_PROTOCOL_BOOT;
+            assert(host_can_send_nkro());
+            host_set_driver(&usb_driver);
+            assert(!host_can_send_nkro());
+            break;
         default:
             assert(false);
     }

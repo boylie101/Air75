@@ -134,6 +134,11 @@ static host_driver_t *host_get_active_driver(void) {
     return driver;
 }
 
+__attribute__((weak)) bool host_can_send_nkro_for_driver(host_driver_t *driver, bool default_capability) {
+    (void)driver;
+    return default_capability;
+}
+
 bool host_can_send_nkro(void) {
 #ifdef CONNECTION_ENABLE
     switch (active_host) {
@@ -148,7 +153,7 @@ bool host_can_send_nkro(void) {
     }
 #endif
 
-    return usb_device_state_get_protocol() == USB_PROTOCOL_REPORT;
+    return host_can_send_nkro_for_driver(host_get_active_driver(), usb_device_state_get_protocol() == USB_PROTOCOL_REPORT);
 }
 
 #ifdef SPLIT_KEYBOARD

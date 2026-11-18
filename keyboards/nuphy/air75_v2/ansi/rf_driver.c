@@ -31,6 +31,11 @@ static void    rf_send_mouse(report_mouse_t *report);
 static void    rf_send_extra(report_extra_t *report);
 host_driver_t  rf_host_driver = {rf_keyboard_leds, rf_send_keyboard, rf_send_nkro, rf_send_mouse, rf_send_extra};
 
+bool host_can_send_nkro_for_driver(host_driver_t *driver, bool default_capability) {
+    /* The NuPhy RF/Bluetooth module is independent of the wired USB protocol. */
+    return driver == &rf_host_driver || default_capability;
+}
+
 /* defined in rf.c */
 extern void uart_send_report_keyboard(report_keyboard_t *report);
 extern void uart_send_report_nkro(report_nkro_t *report);
