@@ -34,7 +34,8 @@ extern bool f_rf_reset;
 extern bool f_rf_hand_ok;
 extern bool f_goto_sleep;
 
-uint8_t  uart_bit_report_buf[32] = {0};
+/* E2 carries a zero prefix and 15 bitmap bytes; higher usages need an E1 slot. */
+static uint8_t uart_bit_report_buf[16] = {0};
 uint8_t  func_tab[32]            = {0};
 uint8_t  bitkb_report_buf[32]    = {0};
 uint8_t  bytekb_report_buf[8]    = {0};
@@ -89,7 +90,7 @@ static void uart_auto_nkro_send(uint8_t *pre_bit_report, uint8_t *now_bit_report
                             break;
                         }
                     }
-                    if (byte_index >= 8) {
+                    if (byte_index >= 8 && i < sizeof(uart_bit_report_buf)) {
                         uart_bit_report_buf[i] |= offset_mask;
                         f_bit_send = 1;
                     }
@@ -101,7 +102,7 @@ static void uart_auto_nkro_send(uint8_t *pre_bit_report, uint8_t *now_bit_report
                             break;
                         }
                     }
-                    if (byte_index >= 8) {
+                    if (byte_index >= 8 && i < sizeof(uart_bit_report_buf)) {
                         uart_bit_report_buf[i] &= ~offset_mask;
                         f_bit_send = 1;
                     }
@@ -114,7 +115,7 @@ static void uart_auto_nkro_send(uint8_t *pre_bit_report, uint8_t *now_bit_report
 
     if (f_bit_send) {
         f_bit_kb_act = 1;
-        uart_send_report(CMD_RPT_BIT_KB, uart_bit_report_buf, 16);
+        uart_send_report(CMD_RPT_BIT_KB, uart_bit_report_buf, sizeof(uart_bit_report_buf));
     }
 
     if (f_byte_send) {
@@ -141,7 +142,7 @@ void uart_send_report_func(void)
             wait_us(200);
 
             if (f_bit_kb_act) {
-                uart_send_report(CMD_RPT_BIT_KB, uart_bit_report_buf, 16);
+                uart_send_report(CMD_RPT_BIT_KB, uart_bit_report_buf, sizeof(uart_bit_report_buf));
             }
         } else {
             f_bit_kb_act = 0;
